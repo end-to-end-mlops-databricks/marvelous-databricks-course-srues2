@@ -2,7 +2,7 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import mean_squared_error, r2_score
 
-class PriceModel:
+class EfficiencyModel:
     def __init__(self, preprocessor, config):
         self.config = config
         self.model = Pipeline(steps=[

@@ -1,6 +1,6 @@
 # Databricks notebook source
-from house_price.data_processor import DataProcessor
-from house_price.config import ProjectConfig
+from sleep_efficiency.data_processor import DataProcessor
+from sleep_efficiency.config import ProjectConfig
 from datetime import datetime
 import pandas as pd
 from pyspark.sql import SparkSession
@@ -9,12 +9,12 @@ spark = SparkSession.builder.getOrCreate()
 
 # COMMAND ----------
 
-config = ProjectConfig.from_yaml(config_path="../../project_config.yml")
+config = ProjectConfig.from_yaml(config_path="../project_config.yml")
 
 # COMMAND ----------
 # Load the house prices dataset
 df = spark.read.csv(
-    "/Volumes/mlops_dev/house_prices/data/data.csv",
+    "/Volumes/dbw_mavencourse_e2emlops_weu_001/sleep_efficiency/data/data.csv",
     header=True,
     inferSchema=True).toPandas()
 
