@@ -19,8 +19,21 @@ In our examples, we use UV. Check out the documentation on how to install it: ht
 To create a new environment and create a lockfile, run:
 
 ```
-uv venv -p 3.11.0 venv
+uv venv -p 3.11.10 venv
 source venv/bin/activate
 uv pip install -r pyproject.toml --all-extras
 uv lock
 ```
+
+## Example of uploading package to the volume:
+```
+databricks auth login --host HOST
+uv build
+
+databricks fs cp dist/wheel dbfs:/Volumes/my_catalog/my_schema/my_volume/
+# example upload data to Catalog (dbfs volume)
+databricks fs cp data/data.csv dbfs:/Volumes/dbw_mavencourse_e2emlops_weu_001/sleep_efficiency/data/data.csv --profile maven_e2emlops_dbw_stan
+# example upload package to Catalog (dbfs volume)
+databricks fs cp dist/mlops_with_databricks-0.0.1-py3-none-any.whl dbfs:/Volumes/dbw_mavencourse_e2emlops_weu_001/sleep_efficiency/packages --profile maven_e2emlops_dbw_stan
+```
+
