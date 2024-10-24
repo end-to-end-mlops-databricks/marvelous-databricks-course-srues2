@@ -37,7 +37,7 @@ def load_data(filepath):
     df = pd.read_csv(filepath)
     return df
 
-filepath = "/Volumes/mlops_dev/house_prices/data/data.csv"
+filepath = "/Volumes/dbw_mavencourse_e2emlops_weu_001/sleep_efficiency/data/data.csv"
 df = load_data(filepath)
 
 # COMMAND ----------
@@ -52,7 +52,7 @@ from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 
-def preprocess_data(df, target_column='SalePrice'):
+def preprocess_data(df, target_column='Sleep efficiency'):
     """
     Preprocess the data.
     
@@ -141,7 +141,7 @@ model, mse, r2, X_train, X_test, y_train, y_test, y_pred = train_and_evaluate_mo
 
 # COMMAND ----------
 
-def plot_actual_vs_predicted(y_test, y_pred, xlabel="Actual Price", ylabel="Predicted Price", title="Actual vs Predicted Prices"):
+def plot_actual_vs_predicted(y_test, y_pred, xlabel="Actual Efficiency", ylabel="Predicted Efficiency", title="Actual vs Predicted Sleep Efficiency"):
     plt.figure(figsize=(10, 6))
     plt.scatter(y_test, y_pred, alpha=0.5)
     plt.plot([y_test.min(), y_test.max()], [y_test.min(), y_test.max()], 'r--', lw=2)
@@ -177,3 +177,7 @@ def plot_feature_importance(model, top_n=10, title="Top Feature Importance", fig
     plt.show()
 
 plot_feature_importance(model)
+
+# COMMAND ----------
+
+
