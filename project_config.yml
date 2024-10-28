@@ -9,8 +9,6 @@ parameters:
 num_features:
   - id
   - age
-  - bedtime
-  - wakeup_time
   - sleep_duration
   - rem_sleep_percentage
   - deep_sleep_percentage

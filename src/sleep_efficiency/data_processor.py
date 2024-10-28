@@ -13,27 +13,20 @@ class DataProcessor:
 
     def preprocess(self):
         """Preprocess the DataFrame stored in self.df"""
-        # Handle missing values and convert data types as needed
-        self.df['LotFrontage'] = pd.to_numeric(self.df['LotFrontage'], errors='coerce')
-
-        self.df['GarageYrBlt'] = pd.to_numeric(self.df['GarageYrBlt'], errors='coerce')
-        median_year = self.df['GarageYrBlt'].median()
-        self.df['GarageYrBlt'].fillna(median_year, inplace=True)
-        current_year = datetime.now().year
-
-        self.df['GarageAge'] = current_year - self.df['GarageYrBlt']
-        self.df.drop(columns=['GarageYrBlt'], inplace=True)
+        # change column names to lowercase and replace spaces with underscores
+        self.df.columns = self.df.columns.str.lower().str.replace(' ', '_')
 
         # Handle numeric features
         num_features = self.config.num_features
         for col in num_features:
             self.df[col] = pd.to_numeric(self.df[col], errors='coerce')
 
-        # Fill missing values with mean or default values
+        # Fill missing values with mean/max/min or default values
         self.df.fillna({
-            'LotFrontage': self.df['LotFrontage'].mean(),
-            'MasVnrType': 'None',
-            'MasVnrArea': 0,
+            'awakenings': self.df['awakenings'].min(),
+            'caffeine_consumption': self.df['caffeine_consumption'].mean(),
+            'alcohol_consumption': self.df['alcohol_consumption'].mean(),
+            'exercise_frequency': self.df['exercise_frequency'].mean()
         }, inplace=True)
 
         # Convert categorical features to the appropriate type
@@ -42,8 +35,9 @@ class DataProcessor:
             self.df[cat_col] = self.df[cat_col].astype('category')
 
         # Extract target and relevant features
+        # Since bedtime and wakeup time is reflected in sleep duration, it will be omitted
         target = self.config.target
-        relevant_columns = cat_features + num_features + [target] + ['Id']
+        relevant_columns = cat_features + num_features + [target] + ['id']
         self.df = self.df[relevant_columns]
 
     def split_data(self, test_size=0.2, random_state=42):
