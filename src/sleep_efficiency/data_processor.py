@@ -2,7 +2,7 @@ import pandas as pd
 from sleep_efficiency.config import ProjectConfig
 import datetime
 from sklearn.model_selection import train_test_split
-from pyspark.sql.functions import current_timestamp, to_utc_timestamp
+from pyspark.sql.functions import current_timestamp, to_utc_timestamp, to_timestamp
 from datetime import datetime
 from pyspark.sql import SparkSession
 
@@ -34,10 +34,15 @@ class DataProcessor:
         for cat_col in cat_features:
             self.df[cat_col] = self.df[cat_col].astype('category')
 
+        # Convert date features to the type datetime
+        date_features = self.config.date_features
+        for date_col in date_features:
+            self.df[date_col] = to_timestamp(self.df[date_col], "yyyy-MM-dd HH:mm:ss")
+
         # Extract target and relevant features
         # Since bedtime and wakeup time is reflected in sleep duration, it will be omitted
         target = self.config.target
-        relevant_columns = cat_features + num_features + [target] + ['id']
+        relevant_columns = cat_features + num_features + date_features + [target] + ['id']
         self.df = self.df[relevant_columns]
 
     def split_data(self, test_size=0.2, random_state=42):

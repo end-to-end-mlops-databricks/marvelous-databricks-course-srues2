@@ -38,15 +38,15 @@ logger.info("Model training completed.")
 
 
 # Evaluate the model
-mse, r2 = model.evaluate(X_test, y_test)
-logger.info(f"Model evaluation completed: MSE={mse}, R2={r2}")
+# mse, r2 = model.evaluate(X_test, y_test)
+# logger.info(f"Model evaluation completed: MSE={mse}, R2={r2}")
 
 ## Visualizing Results
-y_pred = model.predict(X_test)
-visualize_results(y_test, y_pred)
-logger.info("Results visualization completed.")
+# y_pred = model.predict(X_test)
+# visualize_results(y_test, y_pred)
+# logger.info("Results visualization completed.")
 
 ## Feature Importance
-feature_importance, feature_names = model.get_feature_importance()
-plot_feature_importance(feature_importance, feature_names)
-logger.info("Feature importance plot generated.")
+# feature_importance, feature_names = model.get_feature_importance()
+# plot_feature_importance(feature_importance, feature_names)
+# logger.info("Feature importance plot generated.")

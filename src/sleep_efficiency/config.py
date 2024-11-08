@@ -5,6 +5,7 @@ import yaml
 class ProjectConfig(BaseModel):
     num_features: List[str]
     cat_features: List[str]
+    date_features: List[str]
     target: str
     catalog_name: str
     schema_name: str

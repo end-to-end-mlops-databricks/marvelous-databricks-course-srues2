@@ -7,7 +7,6 @@ parameters:
   max_depth: 6
 
 num_features:
-  - id
   - age
   - sleep_duration
   - rem_sleep_percentage
@@ -22,5 +21,8 @@ cat_features:
   - gender
   - smoking_status
  
+date_features:
+  - bedtime
+  - wakeup_time
 
 target: sleep_efficiency
