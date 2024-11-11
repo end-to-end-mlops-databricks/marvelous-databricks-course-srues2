@@ -57,15 +57,15 @@ test_set = spark.table(f"{catalog_name}.{schema_name}.test_set")
 
 # COMMAND ----------
 # s
-df_temperature_nl_2021 = spark.read.csv(
-    "/Volumes/dbw_mavencourse_e2emlops_weu_001/sleep_efficiency/data/weather_netherlands_2021.csv",
-    header=True,
-    inferSchema=True).toPandas()
+# df_temperature_nl_2021 = spark.read.csv(
+#     "/Volumes/dbw_mavencourse_e2emlops_weu_001/sleep_efficiency/data/weather_netherlands_2021.csv",
+#     header=True,
+#     inferSchema=True).toPandas()
 
-df_temperature_with_timestamp = spark.createDataFrame(df_temperature_nl_2021)
+# df_temperature_with_timestamp = spark.createDataFrame(df_temperature_nl_2021)
 
-df_temperature_with_timestamp.write.mode("append").saveAsTable(
-            f"{catalog_name}.{schema_name}.temperatures_netherlands_2021")
+# df_temperature_with_timestamp.write.mode("append").saveAsTable(
+#             f"{catalog_name}.{schema_name}.temperatures_netherlands_2021")
 
 
 # COMMAND ----------
@@ -93,14 +93,14 @@ spark.sql(f"INSERT INTO {catalog_name}.{schema_name}.temperature_features "
 # Define a function to calculate the sleep duration from a person using the bedtime and the wake up time
 spark.sql(f"""
 CREATE OR REPLACE FUNCTION {function_name}(bed_time DATE, wakeup_time DATE )
-RETURNS DECIMAL(2,0)
+RETURNS DOUBLE
 LANGUAGE PYTHON AS
 $$
 from datetime import datetime
-#time_difference = wakeup_time - bed_time
+time_difference = wakeup_time - bed_time
 # Convert the difference to hours
-#hours = time_difference.total_seconds() / 3600
-return 1
+hours = time_difference.total_seconds() / 3600
+return hours
 
 $$
 """)
@@ -110,7 +110,9 @@ $$
 test_set = spark.table(f"{catalog_name}.{schema_name}.test_set").toPandas()
 
 # Cast YearBuilt to int for the function input
-#train_set = train_set.withColumn("YearBuilt", train_set["YearBuilt"].cast("int"))
+train_set = train_set.withColumn("age", train_set["age"].cast("int"))
+train_set = train_set.withColumn("bedtime", train_set["bedtime"].cast("timestamp"))
+train_set = train_set.withColumn("wakeup_time", train_set["wakeup_time"].cast("timestamp"))
 train_set = train_set.withColumn("id", train_set["id"].cast("string"))
 
 # Feature engineering setup
@@ -127,8 +129,7 @@ training_set = fe.create_training_set(
             udf_name=function_name,
             output_name="sleep_hours_duration",
             input_bindings={
-                "bed_time": "bedtime", 
-                "wakeup_time": "wakeup_time"
+                "bed_time": "bedtime", "wakeup_time": "wakeup_time"
             },
         ),
     ],
