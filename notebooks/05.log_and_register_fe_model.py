@@ -92,41 +92,44 @@ spark.sql(f"INSERT INTO {catalog_name}.{schema_name}.temperature_features "
 # COMMAND ----------
 # Define a function to calculate the sleep duration from a person using the bedtime and the wake up time
 spark.sql(f"""
-CREATE OR REPLACE FUNCTION {function_name}(bed_time INT, wakeup_time INT )
-RETURNS INT
+CREATE OR REPLACE FUNCTION {function_name}(bed_time DATE, wakeup_time DATE )
+RETURNS DECIMAL(2,0)
 LANGUAGE PYTHON AS
 $$
 from datetime import datetime
-time_difference = wakeup_time - bed_time
+#time_difference = wakeup_time - bed_time
 # Convert the difference to hours
-hours = time_difference.total_seconds() / 3600
-return hours
+#hours = time_difference.total_seconds() / 3600
+return 1
 
 $$
 """)
 # COMMAND ----------
 # Load training and test sets
-train_set = spark.table(f"{catalog_name}.{schema_name}.train_set").drop("OverallQual", "GrLivArea", "GarageCars")
+#train_set = spark.table(f"{catalog_name}.{schema_name}.train_set").drop("OverallQual", "GrLivArea", "GarageCars")
 test_set = spark.table(f"{catalog_name}.{schema_name}.test_set").toPandas()
 
 # Cast YearBuilt to int for the function input
-train_set = train_set.withColumn("YearBuilt", train_set["YearBuilt"].cast("int"))
-train_set = train_set.withColumn("Id", train_set["Id"].cast("string"))
+#train_set = train_set.withColumn("YearBuilt", train_set["YearBuilt"].cast("int"))
+train_set = train_set.withColumn("id", train_set["id"].cast("string"))
 
 # Feature engineering setup
 training_set = fe.create_training_set(
     df=train_set,
     label=target,
     feature_lookups=[
-        FeatureLookup(
-            table_name=feature_table_name,
-            feature_names=["OverallQual", "GrLivArea", "GarageCars"],
-            lookup_key="Id",
-        ),
+        # FeatureLookup(
+        #    table_name=feature_table_name,
+        #    feature_names=["AverageTemperature"],
+        #    lookup_key="Id",
+        # ),
         FeatureFunction(
             udf_name=function_name,
-            output_name="house_age",
-            input_bindings={"year_built": "YearBuilt"},
+            output_name="sleep_hours_duration",
+            input_bindings={
+                "bed_time": "bedtime", 
+                "wakeup_time": "wakeup_time"
+            },
         ),
     ],
     exclude_columns=["update_timestamp_utc"]
@@ -136,13 +139,15 @@ training_set = fe.create_training_set(
 training_df = training_set.load_df().toPandas()
 
 # Calculate house_age for training and test set
-current_year = datetime.now().year
-test_set["house_age"] = current_year - test_set["YearBuilt"]
+test_set.withColumn(
+    "sleep_hours_duration",
+    F.round((F.col("wakeup_time").cast("long") - F.col("bedtime").cast("long")) / 3600, 2)  # convert seconds to hours
+)
 
 # Split features and target
-X_train = training_df[num_features + cat_features + ["house_age"]]
+X_train = training_df[num_features + cat_features + ["sleep_hours_duration"]]
 y_train = training_df[target]
-X_test = test_set[num_features + cat_features + ["house_age"]]
+X_test = test_set[num_features + cat_features + ["sleep_hours_duration"]]
 y_test = test_set[target]
 
 # Setup preprocessing and model pipeline
@@ -154,10 +159,10 @@ pipeline = Pipeline(
 )
 
 # Set and start MLflow experiment
-mlflow.set_experiment(experiment_name="/Shared/house-prices-fe")
-git_sha = "ffa63b430205ff7"
+mlflow.set_experiment(experiment_name="/Shared/sleep-efficiency-fe")
+git_sha = "nvt"
 
-with mlflow.start_run(tags={"branch": "week2",
+with mlflow.start_run(tags={"branch": "week1and2_stanruessink",
                             "git_sha": f"{git_sha}"}) as run:
     run_id = run.info.run_id
     pipeline.fit(X_train, y_train)
@@ -192,3 +197,5 @@ mlflow.register_model(
     name=f"{catalog_name}.{schema_name}.house_prices_model_fe")
     
 
+
+# COMMAND ----------

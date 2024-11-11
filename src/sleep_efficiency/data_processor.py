@@ -36,8 +36,10 @@ class DataProcessor:
 
         # Convert date features to the type datetime
         date_features = self.config.date_features
+        #for date_col in date_features:
+            #self.df[date_col] = to_timestamp(self.df[date_col], "yyyy-MM-dd HH:mm:ss")
         for date_col in date_features:
-            self.df[date_col] = to_timestamp(self.df[date_col], "yyyy-MM-dd HH:mm:ss")
+            self.df[date_col] = pd.to_datetime(self.df[date_col], format="%Y-%m-%d %H:%M:%S")  # Adjust format if needed
 
         # Extract target and relevant features
         # Since bedtime and wakeup time is reflected in sleep duration, it will be omitted
