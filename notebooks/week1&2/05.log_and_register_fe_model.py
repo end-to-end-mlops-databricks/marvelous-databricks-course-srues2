@@ -4,7 +4,7 @@
 
 # COMMAND ----------
 
-dbutils.library.restartPython() 
+#dbutils.library.restartPython() 
 
 # COMMAND ----------
 
