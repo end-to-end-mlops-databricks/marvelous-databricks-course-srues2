@@ -35,7 +35,7 @@ fe = feature_engineering.FeatureEngineeringClient()
 mlflow.set_registry_uri("databricks-uc")
 mlflow.set_tracking_uri("databricks")
 
-config = ProjectConfig.from_yaml(config_path="../project_config.yml")
+config = ProjectConfig.from_yaml(config_path="../../project_config.yml")
 
 # Extract configuration details
 num_features = config.num_features
@@ -166,7 +166,6 @@ testing_set = fe.create_training_set(
     exclude_columns=["update_timestamp_utc"]
 )
 
-
 # Load feature-engineered DataFrame
 training_df = training_set.load_df().toPandas()
 testing_df = testing_set.load_df().toPandas()
@@ -179,7 +178,7 @@ X_train = training_df[num_features + cat_features ]
 y_train = training_df[target]
 X_test = testing_df[num_features + cat_features ]
 # Don't use sleep_hours_duration, because it's covered in sleep_duration, but was a example to use feature function option
-# X_train = training_df[num_features + cat_features + ["sleep_hours_duration"]]
+# X_test= testing_df[num_features + cat_features + ["sleep_hours_duration"]]
 y_test = testing_df[target]
 
 # Setup preprocessing and model pipeline

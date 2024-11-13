@@ -8,7 +8,7 @@ from pyspark.sql import SparkSession
 spark = SparkSession.builder.getOrCreate()
 
 # COMMAND ----------
-config = ProjectConfig.from_yaml(config_path="../project_config.yml")
+config = ProjectConfig.from_yaml(config_path="../../project_config.yml")
 
 # COMMAND ----------
 # Load the sleep efficiency dataset

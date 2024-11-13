@@ -36,15 +36,17 @@ class DataProcessor:
 
         # Convert date features to the type datetime
         date_features = self.config.date_features
-        #for date_col in date_features:
-            #self.df[date_col] = to_timestamp(self.df[date_col], "yyyy-MM-dd HH:mm:ss")
         for date_col in date_features:
             self.df[date_col] = pd.to_datetime(self.df[date_col], format="%Y-%m-%d %H:%M:%S")  # Adjust format if needed
+        
+        # Add 'month' column based on 'bedtime' column if it exists
+        if 'bedtime' in self.df.columns:
+            self.df['sleep_month'] = self.df['bedtime'].dt.month
 
         # Extract target and relevant features
         # Since bedtime and wakeup time is reflected in sleep duration, it will be omitted
         target = self.config.target
-        relevant_columns = cat_features + num_features + date_features + [target] + ['id']
+        relevant_columns = cat_features + num_features + date_features + [target] + ['id'] + ['sleep_month']
         self.df = self.df[relevant_columns]
 
     def split_data(self, test_size=0.2, random_state=42):
