@@ -1,29 +1,26 @@
 # Databricks notebook source
 # The 2 cells below is only when you are running from databricks UI, because of 'possible' not working locally in VS
-#%pip install mlops_with_databricks-0.0.1-py3-none-any.whl
+# %pip install mlops_with_databricks-0.0.1-py3-none-any.whl
 
 # COMMAND ----------
 
-#dbutils.library.restartPython() 
+# dbutils.library.restartPython()
 
 # COMMAND ----------
 
-import yaml
-from databricks import feature_engineering
-from pyspark.sql import SparkSession
-from databricks.sdk import WorkspaceClient
 import mlflow
-from pyspark.sql import functions as F
+from databricks import feature_engineering
+from databricks.feature_engineering import FeatureFunction, FeatureLookup
+from databricks.sdk import WorkspaceClient
 from lightgbm import LGBMRegressor
 from mlflow.models import infer_signature
+from pyspark.sql import SparkSession
 from sklearn.compose import ColumnTransformer
-from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder
-from datetime import datetime
-from databricks.feature_engineering import FeatureFunction, FeatureLookup
-from sleep_efficiency.config import ProjectConfig
 
+from sleep_efficiency.config import ProjectConfig
 
 # Initialize the Databricks session and clients
 spark = SparkSession.builder.getOrCreate()
@@ -81,16 +78,20 @@ CREATE OR REPLACE TABLE {catalog_name}.{schema_name}.temperature_features
  AverageTemperature INT);
 """)
 
-spark.sql(f"ALTER TABLE {catalog_name}.{schema_name}.temperature_features "
-          "ADD CONSTRAINT month_pk PRIMARY KEY(Month);")
+spark.sql(
+    f"ALTER TABLE {catalog_name}.{schema_name}.temperature_features " "ADD CONSTRAINT month_pk PRIMARY KEY(Month);"
+)
 
-spark.sql(f"ALTER TABLE {catalog_name}.{schema_name}.temperature_features "
-          "SET TBLPROPERTIES (delta.enableChangeDataFeed = true);")
+spark.sql(
+    f"ALTER TABLE {catalog_name}.{schema_name}.temperature_features "
+    "SET TBLPROPERTIES (delta.enableChangeDataFeed = true);"
+)
 
 # Insert data into the feature table from both train and test sets
-spark.sql(f"INSERT INTO {catalog_name}.{schema_name}.temperature_features "
-          f"SELECT ID, Month_number, Average_temperature FROM {catalog_name}.{schema_name}.temperatures_netherlands_2021")
-
+spark.sql(
+    f"INSERT INTO {catalog_name}.{schema_name}.temperature_features "
+    f"SELECT ID, Month_number, Average_temperature FROM {catalog_name}.{schema_name}.temperatures_netherlands_2021"
+)
 
 
 # COMMAND ----------
@@ -115,13 +116,13 @@ $$
 # COMMAND ----------
 
 # Load training and test sets
-#train_set = spark.table(f"{catalog_name}.{schema_name}.train_set").drop("OverallQual", "GrLivArea", "GarageCars")
+# train_set = spark.table(f"{catalog_name}.{schema_name}.train_set").drop("OverallQual", "GrLivArea", "GarageCars")
 # test_set = spark.table(f"{catalog_name}.{schema_name}.test_set").toPandas()
 
 # Cast YearBuilt to int for the function input
-#train_set = train_set.withColumn("age", train_set["age"].cast("int"))
-#train_set = train_set.withColumn("bedtime", train_set["bedtime"].cast("timestamp"))
-#train_set = train_set.withColumn("wakeup_time", train_set["wakeup_time"].cast("timestamp"))
+# train_set = train_set.withColumn("age", train_set["age"].cast("int"))
+# train_set = train_set.withColumn("bedtime", train_set["bedtime"].cast("timestamp"))
+# train_set = train_set.withColumn("wakeup_time", train_set["wakeup_time"].cast("timestamp"))
 train_set = train_set.withColumn("sleep_month", train_set["sleep_month"].cast("int"))
 test_set = test_set.withColumn("sleep_month", test_set["sleep_month"].cast("int"))
 
@@ -131,19 +132,21 @@ training_set = fe.create_training_set(
     label=target,
     feature_lookups=[
         FeatureLookup(
-           table_name=feature_table_name,
-           feature_names=["AverageTemperature"],
-           lookup_key="sleep_month",
+            table_name=feature_table_name,
+            feature_names=["AverageTemperature"],
+            lookup_key="sleep_month",
         ),
         FeatureFunction(
             udf_name=function_name,
             output_name="sleep_hours_duration",
             input_bindings={
-                "bed_time": "bedtime", "wakeup_time": "wakeup_time", "original_sleep_duration": "sleep_duration"
+                "bed_time": "bedtime",
+                "wakeup_time": "wakeup_time",
+                "original_sleep_duration": "sleep_duration",
             },
         ),
     ],
-    exclude_columns=["update_timestamp_utc"]
+    exclude_columns=["update_timestamp_utc"],
 )
 
 testing_set = fe.create_training_set(
@@ -151,19 +154,21 @@ testing_set = fe.create_training_set(
     label=target,
     feature_lookups=[
         FeatureLookup(
-           table_name=feature_table_name,
-           feature_names=["AverageTemperature"],
-           lookup_key="sleep_month",
+            table_name=feature_table_name,
+            feature_names=["AverageTemperature"],
+            lookup_key="sleep_month",
         ),
         FeatureFunction(
             udf_name=function_name,
             output_name="sleep_hours_duration",
             input_bindings={
-                "bed_time": "bedtime", "wakeup_time": "wakeup_time", "original_sleep_duration": "sleep_duration"
+                "bed_time": "bedtime",
+                "wakeup_time": "wakeup_time",
+                "original_sleep_duration": "sleep_duration",
             },
         ),
     ],
-    exclude_columns=["update_timestamp_utc"]
+    exclude_columns=["update_timestamp_utc"],
 )
 
 # Load feature-engineered DataFrame
@@ -171,12 +176,12 @@ training_df = training_set.load_df().toPandas()
 testing_df = testing_set.load_df().toPandas()
 
 # Split features and target
-X_train = training_df[num_features + cat_features ]
+X_train = training_df[num_features + cat_features]
 # Don't use sleep_hours_duration, because it's covered in sleep_duration, but was a example to use feature function option
 # X_train = training_df[num_features + cat_features + ["sleep_hours_duration"]]
 
 y_train = training_df[target]
-X_test = testing_df[num_features + cat_features ]
+X_test = testing_df[num_features + cat_features]
 # Don't use sleep_hours_duration, because it's covered in sleep_duration, but was a example to use feature function option
 # X_test= testing_df[num_features + cat_features + ["sleep_hours_duration"]]
 y_test = testing_df[target]
@@ -185,16 +190,13 @@ y_test = testing_df[target]
 preprocessor = ColumnTransformer(
     transformers=[("cat", OneHotEncoder(handle_unknown="ignore"), cat_features)], remainder="passthrough"
 )
-pipeline = Pipeline(
-    steps=[("preprocessor", preprocessor), ("regressor", LGBMRegressor(**parameters))]
-)
+pipeline = Pipeline(steps=[("preprocessor", preprocessor), ("regressor", LGBMRegressor(**parameters))])
 
 # Set and start MLflow experiment
 mlflow.set_experiment(experiment_name="/Shared/sleep-efficiency-fe")
 git_sha = "nvt"
 
-with mlflow.start_run(tags={"branch": "week1and2_stanruessink",
-                            "git_sha": f"{git_sha}"}) as run:
+with mlflow.start_run(tags={"branch": "week1and2_stanruessink", "git_sha": f"{git_sha}"}) as run:
     run_id = run.info.run_id
     pipeline.fit(X_train, y_train)
     y_pred = pipeline.predict(X_test)
@@ -224,7 +226,5 @@ with mlflow.start_run(tags={"branch": "week1and2_stanruessink",
         signature=signature,
     )
 mlflow.register_model(
-    model_uri=f'runs:/{run_id}/lightgbm-pipeline-model-fe',
-    name=f"{catalog_name}.{schema_name}.house_prices_model_fe")
-    
-
+    model_uri=f"runs:/{run_id}/lightgbm-pipeline-model-fe", name=f"{catalog_name}.{schema_name}.house_prices_model_fe"
+)

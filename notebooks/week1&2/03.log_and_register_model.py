@@ -1,17 +1,18 @@
 # Databricks notebook source
 
-from pyspark.sql import SparkSession
-from sleep_efficiency.config import ProjectConfig
-from sklearn.preprocessing import OneHotEncoder
-from sklearn.compose import ColumnTransformer
-from sklearn.pipeline import Pipeline
-from lightgbm import LGBMRegressor
-from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 import mlflow
+from lightgbm import LGBMRegressor
 from mlflow.models import infer_signature
+from pyspark.sql import SparkSession
+from sklearn.compose import ColumnTransformer
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import OneHotEncoder
+
+from sleep_efficiency.config import ProjectConfig
 
 mlflow.set_tracking_uri("databricks")
-mlflow.set_registry_uri('databricks-uc') # It must be -uc for registering models to Unity Catalog
+mlflow.set_registry_uri("databricks-uc")  # It must be -uc for registering models to Unity Catalog
 
 # COMMAND ----------
 
@@ -42,25 +43,20 @@ y_test = test_set[target]
 # COMMAND ----------
 # Define the preprocessor for categorical features
 preprocessor = ColumnTransformer(
-    transformers=[('cat', OneHotEncoder(handle_unknown='ignore'), cat_features)], 
-    remainder='passthrough'
+    transformers=[("cat", OneHotEncoder(handle_unknown="ignore"), cat_features)], remainder="passthrough"
 )
 
 # Create the pipeline with preprocessing and the LightGBM regressor
-pipeline = Pipeline(steps=[
-    ('preprocessor', preprocessor),
-    ('regressor', LGBMRegressor(**parameters))
-])
+pipeline = Pipeline(steps=[("preprocessor", preprocessor), ("regressor", LGBMRegressor(**parameters))])
 
 
 # COMMAND ----------
-mlflow.set_experiment(experiment_name='/Shared/sleep_efficiency')
+mlflow.set_experiment(experiment_name="/Shared/sleep_efficiency")
 git_sha = "ffa63b430205ff7"
 
 # Start an MLflow run to track the training process
 with mlflow.start_run(
-    tags={"git_sha": f"{git_sha}",
-          "branch": "week1and2_stanruessink"},
+    tags={"git_sha": f"{git_sha}", "branch": "week1and2_stanruessink"},
 ) as run:
     run_id = run.info.run_id
 
@@ -84,23 +80,18 @@ with mlflow.start_run(
     mlflow.log_metric("r2_score", r2)
     signature = infer_signature(model_input=X_train, model_output=y_pred)
 
-    dataset = mlflow.data.from_spark(
-    train_set_spark, table_name=f"{catalog_name}.{schema_name}.train_set",
-    version="0")
+    dataset = mlflow.data.from_spark(train_set_spark, table_name=f"{catalog_name}.{schema_name}.train_set", version="0")
     mlflow.log_input(dataset, context="training")
-    
-    mlflow.sklearn.log_model(
-        sk_model=pipeline,
-        artifact_path="lightgbm-pipeline-model",
-        signature=signature
-    )
+
+    mlflow.sklearn.log_model(sk_model=pipeline, artifact_path="lightgbm-pipeline-model", signature=signature)
 
 
 # COMMAND ----------
 model_version = mlflow.register_model(
-    model_uri=f'runs:/{run_id}/lightgbm-pipeline-model',
+    model_uri=f"runs:/{run_id}/lightgbm-pipeline-model",
     name=f"{catalog_name}.{schema_name}.sleep_efficiency_model_basic",
-    tags={"git_sha": f"{git_sha}"})
+    tags={"git_sha": f"{git_sha}"},
+)
 
 # COMMAND ----------
 run = mlflow.get_run(run_id)

@@ -20,7 +20,7 @@ num_features:
 cat_features:
   - gender
   - smoking_status
- 
+
 date_features:
   - bedtime
   - wakeup_time

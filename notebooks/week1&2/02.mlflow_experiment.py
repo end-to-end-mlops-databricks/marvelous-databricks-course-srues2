@@ -9,9 +9,7 @@ mlflow.set_experiment(experiment_name="/Shared/sleep-efficiency-basic")
 mlflow.set_experiment_tags({"repository_name": "sleep-efficiency"})
 
 # COMMAND ----------
-experiments = mlflow.search_experiments(
-    filter_string="tags.repository_name='sleep-efficiency'"
-)
+experiments = mlflow.search_experiments(filter_string="tags.repository_name='sleep-efficiency'")
 print(experiments)
 
 # COMMAND ----------
@@ -20,8 +18,7 @@ with open("mlflow_experiment.json", "w") as json_file:
 # COMMAND ----------
 with mlflow.start_run(
     run_name="demo-run",
-    tags={"git_sha": "nvt",
-          "branch": "week1and2_stanruessink"},
+    tags={"git_sha": "nvt", "branch": "week1and2_stanruessink"},
     description="test mlflow run week1and2",
 ) as run:
     mlflow.log_params({"type": "test"})
