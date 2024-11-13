@@ -77,12 +77,12 @@ test_set = spark.table(f"{catalog_name}.{schema_name}.test_set")
 spark.sql(f"""
 CREATE OR REPLACE TABLE {catalog_name}.{schema_name}.temperature_features
 (Id STRING NOT NULL,
- Month INT,
+ Month INT NOT NULL,
  AverageTemperature INT);
 """)
 
 spark.sql(f"ALTER TABLE {catalog_name}.{schema_name}.temperature_features "
-          "ADD CONSTRAINT month_pk PRIMARY KEY(Id);")
+          "ADD CONSTRAINT month_pk PRIMARY KEY(Month);")
 
 spark.sql(f"ALTER TABLE {catalog_name}.{schema_name}.temperature_features "
           "SET TBLPROPERTIES (delta.enableChangeDataFeed = true);")
@@ -116,13 +116,14 @@ $$
 
 # Load training and test sets
 #train_set = spark.table(f"{catalog_name}.{schema_name}.train_set").drop("OverallQual", "GrLivArea", "GarageCars")
-test_set = spark.table(f"{catalog_name}.{schema_name}.test_set").toPandas()
+# test_set = spark.table(f"{catalog_name}.{schema_name}.test_set").toPandas()
 
 # Cast YearBuilt to int for the function input
-train_set = train_set.withColumn("age", train_set["age"].cast("int"))
-train_set = train_set.withColumn("bedtime", train_set["bedtime"].cast("timestamp"))
-train_set = train_set.withColumn("wakeup_time", train_set["wakeup_time"].cast("timestamp"))
-train_set = train_set.withColumn("id", train_set["id"].cast("string"))
+#train_set = train_set.withColumn("age", train_set["age"].cast("int"))
+#train_set = train_set.withColumn("bedtime", train_set["bedtime"].cast("timestamp"))
+#train_set = train_set.withColumn("wakeup_time", train_set["wakeup_time"].cast("timestamp"))
+train_set = train_set.withColumn("sleep_month", train_set["sleep_month"].cast("int"))
+test_set = test_set.withColumn("sleep_month", test_set["sleep_month"].cast("int"))
 
 # Feature engineering setup
 training_set = fe.create_training_set(
@@ -132,7 +133,7 @@ training_set = fe.create_training_set(
         FeatureLookup(
            table_name=feature_table_name,
            feature_names=["AverageTemperature"],
-           lookup_key="id",
+           lookup_key="sleep_month",
         ),
         FeatureFunction(
             udf_name=function_name,
@@ -145,20 +146,41 @@ training_set = fe.create_training_set(
     exclude_columns=["update_timestamp_utc"]
 )
 
-# Load feature-engineered DataFrame
-training_df = training_set.load_df().toPandas()
-
-# Calculate sleep for training and test set
-test_set.withColumn(
-    "sleep_hours_duration",
-    F.round((F.col("wakeup_time").cast("long") - F.col("bedtime").cast("long")) / 3600, 2)  # convert seconds to hours
+testing_set = fe.create_training_set(
+    df=test_set,
+    label=target,
+    feature_lookups=[
+        FeatureLookup(
+           table_name=feature_table_name,
+           feature_names=["AverageTemperature"],
+           lookup_key="sleep_month",
+        ),
+        FeatureFunction(
+            udf_name=function_name,
+            output_name="sleep_hours_duration",
+            input_bindings={
+                "bed_time": "bedtime", "wakeup_time": "wakeup_time", "original_sleep_duration": "sleep_duration"
+            },
+        ),
+    ],
+    exclude_columns=["update_timestamp_utc"]
 )
 
+
+# Load feature-engineered DataFrame
+training_df = training_set.load_df().toPandas()
+testing_df = testing_set.load_df().toPandas()
+
 # Split features and target
-X_train = training_df[num_features + cat_features + ["sleep_hours_duration"]]
+X_train = training_df[num_features + cat_features ]
+# Don't use sleep_hours_duration, because it's covered in sleep_duration, but was a example to use feature function option
+# X_train = training_df[num_features + cat_features + ["sleep_hours_duration"]]
+
 y_train = training_df[target]
-X_test = test_set[num_features + cat_features + ["sleep_hours_duration"]]
-y_test = test_set[target]
+X_test = testing_df[num_features + cat_features ]
+# Don't use sleep_hours_duration, because it's covered in sleep_duration, but was a example to use feature function option
+# X_train = training_df[num_features + cat_features + ["sleep_hours_duration"]]
+y_test = testing_df[target]
 
 # Setup preprocessing and model pipeline
 preprocessor = ColumnTransformer(
@@ -207,11 +229,3 @@ mlflow.register_model(
     name=f"{catalog_name}.{schema_name}.house_prices_model_fe")
     
 
-
-# COMMAND ----------
-
-display(training_df)
-
-# COMMAND ----------
-
-display(training_df)
