@@ -1,14 +1,13 @@
 # Databricks notebook source
-# COMMAND ----------
 # The 2 cells below is only when you are running from databricks UI, because of 'possible' not working locally in VS
-# Databricks notebook source
-# MAGIC %pip install mlops_with_databricks-0.0.1-py3-none-any.whl
+%pip install mlops_with_databricks-0.0.1-py3-none-any.whl
 
 # COMMAND ----------
 
 dbutils.library.restartPython() 
 
 # COMMAND ----------
+
 import yaml
 from databricks import feature_engineering
 from pyspark.sql import SparkSession
@@ -52,12 +51,14 @@ function_name = f"{catalog_name}.{schema_name}.calculate_sleep_duration"
 
 
 # COMMAND ----------
+
 # Load training and test sets
 train_set = spark.table(f"{catalog_name}.{schema_name}.train_set")
 test_set = spark.table(f"{catalog_name}.{schema_name}.test_set")
 
 
 # COMMAND ----------
+
 # s
 # df_temperature_nl_2021 = spark.read.csv(
 #     "/Volumes/dbw_mavencourse_e2emlops_weu_001/sleep_efficiency/data/weather_netherlands_2021.csv",
@@ -71,6 +72,7 @@ test_set = spark.table(f"{catalog_name}.{schema_name}.test_set")
 
 
 # COMMAND ----------
+
 # Create or replace the temperature_features table
 spark.sql(f"""
 CREATE OR REPLACE TABLE {catalog_name}.{schema_name}.temperature_features
@@ -92,21 +94,26 @@ spark.sql(f"INSERT INTO {catalog_name}.{schema_name}.temperature_features "
 
 
 # COMMAND ----------
+
 # Define a function to calculate the sleep duration from a person using the bedtime and the wake up time
+
+# This is a test calculation. The sleep duration is already defined in the original table. However, to test if a function like this can work, here is a example. The orginal dataset shows not correct values for wakeup time and bedtime dates. Therefore the algortihm gives the wrong values. But this illustrates how it can work. To be sure to get the correct value, the algoritm returns the orginal value from the input dataset.
 spark.sql(f"""
-CREATE OR REPLACE FUNCTION {function_name}(bed_time DATE, wakeup_time DATE )
+CREATE OR REPLACE FUNCTION {function_name}(bed_time TIMESTAMP, wakeup_time TIMESTAMP, original_sleep_duration DOUBLE )
 RETURNS DOUBLE
 LANGUAGE PYTHON AS
 $$
 from datetime import datetime
-time_difference = wakeup_time - bed_time
-# Convert the difference to hours
-hours = time_difference.total_seconds() / 3600
-return hours
-
+# Calculate the difference and get the absolute value in hours
+time_difference = abs(bed_time - wakeup_time)
+hours_difference = time_difference.total_seconds() / 3600
+# return hours_difference
+return original_sleep_duration
 $$
 """)
+
 # COMMAND ----------
+
 # Load training and test sets
 #train_set = spark.table(f"{catalog_name}.{schema_name}.train_set").drop("OverallQual", "GrLivArea", "GarageCars")
 test_set = spark.table(f"{catalog_name}.{schema_name}.test_set").toPandas()
@@ -122,16 +129,16 @@ training_set = fe.create_training_set(
     df=train_set,
     label=target,
     feature_lookups=[
-        # FeatureLookup(
-        #    table_name=feature_table_name,
-        #    feature_names=["AverageTemperature"],
-        #    lookup_key="Id",
-        # ),
+        FeatureLookup(
+           table_name=feature_table_name,
+           feature_names=["AverageTemperature"],
+           lookup_key="id",
+        ),
         FeatureFunction(
             udf_name=function_name,
             output_name="sleep_hours_duration",
             input_bindings={
-                "bed_time": "bedtime", "wakeup_time": "wakeup_time"
+                "bed_time": "bedtime", "wakeup_time": "wakeup_time", "original_sleep_duration": "sleep_duration"
             },
         ),
     ],
@@ -141,7 +148,7 @@ training_set = fe.create_training_set(
 # Load feature-engineered DataFrame
 training_df = training_set.load_df().toPandas()
 
-# Calculate house_age for training and test set
+# Calculate sleep for training and test set
 test_set.withColumn(
     "sleep_hours_duration",
     F.round((F.col("wakeup_time").cast("long") - F.col("bedtime").cast("long")) / 3600, 2)  # convert seconds to hours
@@ -202,3 +209,9 @@ mlflow.register_model(
 
 
 # COMMAND ----------
+
+display(training_df)
+
+# COMMAND ----------
+
+display(training_df)
