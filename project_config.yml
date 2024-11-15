@@ -1,0 +1,28 @@
+catalog_name: dbw_mavencourse_e2emlops_weu_001
+schema_name: sleep_efficiency
+
+parameters:
+  learning_rate: 0.01
+  n_estimators: 1000
+  max_depth: 6
+
+num_features:
+  - age
+  - sleep_duration
+  - rem_sleep_percentage
+  - deep_sleep_percentage
+  - light_sleep_percentage
+  - awakenings
+  - caffeine_consumption
+  - alcohol_consumption
+  - exercise_frequency
+
+cat_features:
+  - gender
+  - smoking_status
+
+date_features:
+  - bedtime
+  - wakeup_time
+
+target: sleep_efficiency

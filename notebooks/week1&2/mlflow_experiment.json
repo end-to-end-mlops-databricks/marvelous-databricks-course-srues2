@@ -1,0 +1,15 @@
+{
+    "_experiment_id": "4122017132878425",
+    "_name": "/Shared/sleep-efficiency-basic",
+    "_artifact_location": "dbfs:/databricks/mlflow-tracking/4122017132878425",
+    "_lifecycle_stage": "active",
+    "_tags": {
+        "mlflow.experiment.sourceName": "/Shared/sleep-efficiency-basic",
+        "mlflow.ownerId": "225670788236673",
+        "mlflow.ownerEmail": "srues2@xs4all.nl",
+        "mlflow.experimentType": "MLFLOW_EXPERIMENT",
+        "repository_name": "sleep-efficiency"
+    },
+    "_creation_time": 1730192453793,
+    "_last_update_time": 1731312736854
+}

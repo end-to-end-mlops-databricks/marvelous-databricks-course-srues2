@@ -1,0 +1,13 @@
+ID,Month_name,Month_number,Year,Average_temperature
+1,January,1,2021,3.1
+2,Februari,2,2021,4.6
+3,March,3,2021,6.6
+4,April,4,2021,6.6
+5,May,5,2021,11.7
+6,June,6,2021,19.1
+7,July,7,2021,18.1
+8,August,8,2021,16.8
+9,September,9,2021,15.8
+10,October,10,2021,11.3
+11,November,11,2021,6.1
+12,December,12,2021,5.6

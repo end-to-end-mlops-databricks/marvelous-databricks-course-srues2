@@ -1,0 +1,40 @@
+{
+    "info": {
+        "artifact_uri": "dbfs:/databricks/mlflow-tracking/4122017132878425/a41a0214f27f432188b0a8a0e4325a32/artifacts",
+        "end_time": 1731501995200,
+        "experiment_id": "4122017132878425",
+        "lifecycle_stage": "active",
+        "run_id": "a41a0214f27f432188b0a8a0e4325a32",
+        "run_name": "demo-run",
+        "run_uuid": "a41a0214f27f432188b0a8a0e4325a32",
+        "start_time": 1731501994259,
+        "status": "FINISHED",
+        "user_id": ""
+    },
+    "data": {
+        "metrics": {
+            "metric1": 1.0,
+            "metric2": 2.0
+        },
+        "params": {
+            "type": "test"
+        },
+        "tags": {
+            "branch": "week1and2_stanruessink",
+            "git_sha": "nvt",
+            "mlflow.databricks.cluster.id": "1014-121342-xb98b9gq",
+            "mlflow.databricks.cluster.info": "{\"cluster_name\":\"Stan Ruessink's Cluster\",\"spark_version\":\"15.4.x-scala2.12\",\"node_type_id\":\"Standard_DS3_v2\",\"driver_node_type_id\":\"Standard_DS3_v2\",\"autotermination_minutes\":120,\"disk_spec\":{},\"num_workers\":0}",
+            "mlflow.databricks.cluster.libraries": "{\"installable\":[],\"redacted\":[]}",
+            "mlflow.databricks.notebook.commandID": "1731487588015_7284591299502283861_eed00c13c3bd449584343200c84b125f",
+            "mlflow.note.content": "test mlflow run week1and2",
+            "mlflow.runColor": "#479a5f",
+            "mlflow.runName": "demo-run",
+            "mlflow.source.name": "/Users/stanruessink/Documents/Projects/MavenCourse/MlOps/marvelous-databricks-course-srues2/.venv/lib/python3.11/site-packages/ipykernel_launcher.py",
+            "mlflow.source.type": "LOCAL",
+            "mlflow.user": "srues2@xs4all.nl"
+        }
+    },
+    "inputs": {
+        "dataset_inputs": []
+    }
+}
