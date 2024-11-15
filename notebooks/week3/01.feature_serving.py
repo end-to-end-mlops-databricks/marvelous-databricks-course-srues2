@@ -1,5 +1,5 @@
 # Databricks notebook source
-# MAGIC %pip install ../housing_price-0.0.1-py3-none-any.whl
+# MAGIC %pip install ../mlops_with_databricks-0.0.1-py3-none-any.whl
 
 # COMMAND ----------
 
@@ -81,12 +81,12 @@ df = pd.concat([train_set, test_set])
 # COMMAND ----------
 
 # Load the MLflow model for predictions
-pipeline = mlflow.sklearn.load_model(f"models:/{catalog_name}.{schema_name}.sleep_efficiencies_model/2")
+pipeline = mlflow.sklearn.load_model(f"models:/{catalog_name}.{schema_name}.sleep_efficiency_model_basic/3")
 
 # COMMAND ----------
 
 # Prepare the DataFrame for predictions and feature table creation - these features are the ones we want to serve.
-preds_df = df[["Id", "sleep_duration", "awakenings"]]
+preds_df = df[["id", "sleep_duration", "awakenings", "sleep_month"]]
 preds_df["Predicted_SleepEfficiency"] = pipeline.predict(df[cat_features + num_features])
 
 preds_df = spark.createDataFrame(preds_df)
@@ -94,7 +94,7 @@ preds_df = spark.createDataFrame(preds_df)
 # 1. Create the feature table in Databricks
 
 fe.create_table(
-    name=feature_table_name, primary_keys=["Id"], df=preds_df, description="Sleep efficiencies predictions feature table"
+    name=feature_table_name, primary_keys=["id"], df=preds_df, description="Sleep efficiencies predictions feature table"
 )
 
 # Enable Change Data Feed
@@ -108,7 +108,7 @@ spark.sql(f"""
 # 2. Create the online table using feature table
 
 spec = OnlineTableSpec(
-    primary_key_columns=["Id"],
+    primary_key_columns=["id"],
     source_table_full_name=feature_table_name,
     run_triggered=OnlineTableSpecTriggeredSchedulingPolicy.from_dict({"triggered": "true"}),
     perform_full_copy=False,
@@ -118,12 +118,13 @@ spec = OnlineTableSpec(
 online_table_pipeline = workspace.online_tables.create(name=online_table_name, spec=spec)
 
 # COMMAND ----------
+
 # 3. Create feture look up and feature spec table feature table
 
 # Define features to look up from the feature table
 features = [
     FeatureLookup(
-        table_name=feature_table_name, lookup_key="Id", feature_names=["GrLivArea", "YearBuilt", "Predicted_SalePrice"]
+        table_name=feature_table_name, lookup_key="Id", feature_names=["id", "sleep_duration", "awakenings", "sleep_month", "Predicted_SleepEfficiency"]
     )
 ]
 
@@ -138,6 +139,7 @@ fe.create_feature_spec(name=feature_spec_name, features=features, exclude_column
 # MAGIC ## Deploy Feature Serving Endpoint
 
 # COMMAND ----------
+
 # 4. Create endpoing using feature spec
 
 # Create a serving endpoint for the sleep efficiencies predictions
@@ -162,6 +164,7 @@ workspace.serving_endpoints.create(
 # COMMAND ----------
 
 
+
 # COMMAND ----------
 
 token = dbutils.notebook.entry_point.getDbutils().notebook().getContext().apiToken().get()
@@ -173,6 +176,13 @@ id_list = preds_df["Id"]
 
 # COMMAND ----------
 
+display(id_list)
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC
+
 # COMMAND ----------
 
 start_time = time.time()
@@ -180,7 +190,7 @@ serving_endpoint = f"https://{host}/serving-endpoints/sleep-efficiencies-feature
 response = requests.post(
     f"{serving_endpoint}",
     headers={"Authorization": f"Bearer {token}"},
-    json={"dataframe_records": [{"Id": "182"}]},
+    json={"dataframe_records": [{"Id": "2"}]},
 )
 
 end_time = time.time()
@@ -192,18 +202,20 @@ print("Execution time:", execution_time, "seconds")
 
 
 # COMMAND ----------
+
 # another way to call the endpoint
 
 response = requests.post(
     f"{serving_endpoint}",
     headers={"Authorization": f"Bearer {token}"},
-    json={"dataframe_split": {"columns": ["Id"], "data": [["182"]]}},
+    json={"dataframe_split": {"columns": ["Id"], "data": [["2"]]}},
 )
 
-# MAGIC %md
-# MAGIC ## Load Test
+
+## Load Test
 
 # COMMAND ----------
+
 # Initialize variables
 serving_endpoint = f"https://{host}/serving-endpoints/sleep-efficiencies-feature-serving/invocations"
 id_list = preds_df.select("Id").rdd.flatMap(lambda x: x).collect()
