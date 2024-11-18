@@ -1,7 +1,8 @@
 # Databricks notebook source
-# MAGIC %pip install ../housing_price-0.0.1-py3-none-any.whl
+# MAGIC %pip install ../mlops_with_databricks-0.0.1-py3-none-any.whl
 
 # COMMAND ----------
+
 # MAGIC %restart_python
 
 # COMMAND ----------
@@ -10,6 +11,8 @@ import time
 
 import requests
 import random
+import pandas as pd
+
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from databricks.sdk import WorkspaceClient
@@ -111,11 +114,16 @@ Each body should be list of json with columns
 """
 
 # COMMAND ----------
+
 start_time = time.time()
 
 model_serving_endpoint = (
     f"https://{host}/serving-endpoints/sleep-efficiencies-model-serving/invocations"
 )
+
+# Convert Timestamp to string
+dataframe_records[0] = [{k: (v.isoformat() if isinstance(v, pd.Timestamp) else v) for k, v in record.items()} for record in dataframe_records[0]]
+
 response = requests.post(
     f"{model_serving_endpoint}",
     headers={"Authorization": f"Bearer {token}"},
@@ -147,7 +155,7 @@ num_requests = 1000
 
 # Function to make a request and record latency
 def send_request():
-    random_record = random.choice(dataframe_records)
+    random_record = [{k: (v.isoformat() if isinstance(v, pd.Timestamp) else v) for k, v in record.items()} for record in random.choice(dataframe_records)]
     start_time = time.time()
     response = requests.post(
         model_serving_endpoint,
