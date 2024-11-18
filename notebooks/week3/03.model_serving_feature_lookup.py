@@ -40,7 +40,7 @@ schema_name = config.schema_name
 
 # COMMAND ----------
 
-online_table_name = f"{catalog_name}.{schema_name}.sleep_features_online"
+online_table_name = f"{catalog_name}.{schema_name}.temperature_features_online"
 spec = OnlineTableSpec(
     primary_key_columns=["Month"],
     source_table_full_name=f"{catalog_name}.{schema_name}.temperature_features",

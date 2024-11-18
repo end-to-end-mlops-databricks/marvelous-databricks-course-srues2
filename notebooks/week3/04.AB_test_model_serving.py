@@ -2,9 +2,11 @@
 # MAGIC %pip install ../mlops_with_databricks-0.0.1-py3-none-any.whl
 
 # COMMAND ----------
+
 # MAGIC %restart_python
 
 # COMMAND ----------
+
 import time
 
 import mlflow
@@ -215,25 +217,27 @@ class SleepEfficiencyModelWrapper(mlflow.pyfunc.PythonModel):
 
     def predict(self, context, model_input):
         if isinstance(model_input, pd.DataFrame):
-            sleep_person_id = str(model_input["Id"].values[0])
+            sleep_person_id = str(model_input["id"].values[0])
             hashed_id = hashlib.md5(sleep_person_id.encode(encoding="UTF-8")).hexdigest()
             # convert a hexadecimal (base-16) string into an integer
             if int(hashed_id, 16) % 2:
-                predictions = self.model_a.predict(model_input.drop(["Id"], axis=1))
+                predictions = self.model_a.predict(model_input.drop(["id"], axis=1))
                 return {"Prediction": predictions[0], "model": "Model A"}
             else:
-                predictions = self.model_b.predict(model_input.drop(["Id"], axis=1))
+                predictions = self.model_b.predict(model_input.drop(["id"], axis=1))
                 return {"Prediction": predictions[0], "model": "Model B"}
         else:
             raise ValueError("Input must be a pandas DataFrame.")
 
 
 # COMMAND ----------
-X_train = train_set[num_features + cat_features + ["Id"]]
-X_test = test_set[num_features + cat_features + ["Id"]]
+
+X_train = train_set[num_features + cat_features + ["id"]]
+X_test = test_set[num_features + cat_features + ["id"]]
 
 
 # COMMAND ----------
+
 models = [model_A, model_B]
 wrapped_model = SleepEfficiencyModelWrapper(models)  # we pass the loaded models to the wrapper
 example_input = X_test.iloc[0:1]  # Select the first row for prediction as example
@@ -243,6 +247,7 @@ example_prediction = wrapped_model.predict(
 print("Example Prediction:", example_prediction)
 
 # COMMAND ----------
+
 mlflow.set_experiment(experiment_name="/Shared/sleep-efficiencies-ab-testing")
 model_name = f"{catalog_name}.{schema_name}.sleep_efficiencies_model_pyfunc_ab_test"
 
@@ -267,6 +272,7 @@ model_version = mlflow.register_model(
 )
 
 # COMMAND ----------
+
 model = mlflow.pyfunc.load_model(model_uri=f"models:/{model_name}/{model_version.version}")
 
 # Run prediction
@@ -339,6 +345,9 @@ model_serving_endpoint = (
     f"https://{host}/serving-endpoints/sleep-efficiencies-model-serving-ab-test/invocations"
 )
 
+# Convert Timestamp to string
+dataframe_records[0] = [{k: (v.isoformat() if isinstance(v, pd.Timestamp) else v) for k, v in record.items()} for record in dataframe_records[0]]
+
 response = requests.post(
     f"{model_serving_endpoint}",
     headers={"Authorization": f"Bearer {token}"},
@@ -351,3 +360,7 @@ execution_time = end_time - start_time
 print("Response status:", response.status_code)
 print("Reponse text:", response.text)
 print("Execution time:", execution_time, "seconds")
+
+# COMMAND ----------
+
+
