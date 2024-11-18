@@ -47,10 +47,10 @@ Steps:
 This is a combination of the previous two examples. We load a pre-trained model and create a feature table for look up. Then we create a model serving endpoint that uses the feature table. Last week, we trained a model with feature lookup and feature func. Now we will create a serving endpoint for that model.
 
 Steps:
-- We start with creating an online table for existing offline feature table, house_features. This is the table we created last week on *week 2 - 05.log_and_register_fe_model.py* notebook.
+- We start with creating an online table for existing offline feature table, temperature_features. This is the table we created last week on *week 2 - 05.log_and_register_fe_model.py* notebook.
 - This online table is required for our model to look up features at serving endpoint.
 - Next is the same as in the previous notebook, we create an endpoint using the model we registred in the same notebook *week 2 - 05.log_and_register_fe_model.p*. This is the model we registred using feature lookup and feature func.
-- When we send request to the model endpoint, this time, we won't need to provide all the features. 3 features will be taken from the feature lookup table, also one feature "house_age" will be calculated by the feature function. 
+- When we send request to the model endpoint, this time, we won't need to provide all the features. 3 features will be taken from the feature lookup table, also one feature "sleep_duration" will be calculated by the feature function. 
 
 
 ### 4. A/B Testing
