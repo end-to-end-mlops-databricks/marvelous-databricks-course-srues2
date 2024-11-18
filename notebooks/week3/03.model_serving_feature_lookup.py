@@ -107,7 +107,7 @@ required_columns = [
     "bedtime",
     "wakeup_time",
     "id",
-    "sleep_month"
+    "sleep_month",
 ]
 
 train_set = spark.table(f"{catalog_name}.{schema_name}.train_set").toPandas()
@@ -131,7 +131,10 @@ start_time = time.time()
 
 model_serving_endpoint = f"https://{host}/serving-endpoints/sleep-efficiencies-model-serving-fe/invocations"
 
-dataframe_records[0] = [{k: (v.isoformat() if isinstance(v, pd.Timestamp) else v) for k, v in record.items()} for record in dataframe_records[0]]
+dataframe_records[0] = [
+    {k: (v.isoformat() if isinstance(v, pd.Timestamp) else v) for k, v in record.items()}
+    for record in dataframe_records[0]
+]
 
 response = requests.post(
     f"{model_serving_endpoint}",
@@ -155,5 +158,3 @@ sleep_features = spark.table(f"{catalog_name}.{schema_name}.temperature_features
 sleep_features.dtypes
 
 # COMMAND ----------
-
-

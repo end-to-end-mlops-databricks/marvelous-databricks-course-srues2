@@ -7,24 +7,22 @@
 
 # COMMAND ----------
 
-import time
-
-import requests
 import random
-import pandas as pd
-
+import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
+import pandas as pd
+import requests
 from databricks.sdk import WorkspaceClient
 from databricks.sdk.service.serving import (
     EndpointCoreConfigInput,
+    Route,
     ServedEntityInput,
     TrafficConfig,
-    Route,
 )
+from pyspark.sql import SparkSession
 
 from sleep_efficiency.config import ProjectConfig
-from pyspark.sql import SparkSession
 
 workspace = WorkspaceClient()
 spark = SparkSession.builder.getOrCreate()
@@ -47,12 +45,9 @@ workspace.serving_endpoints.create(
                 entity_version=3,
             )
         ],
-    # Optional if only 1 entity is served
-    traffic_config=TrafficConfig(
-        routes=[
-            Route(served_model_name="sleep_efficiency_model_basic-3",
-                  traffic_percentage=100)
-        ]
+        # Optional if only 1 entity is served
+        traffic_config=TrafficConfig(
+            routes=[Route(served_model_name="sleep_efficiency_model_basic-3", traffic_percentage=100)]
         ),
     ),
 )
@@ -87,7 +82,7 @@ required_columns = [
     "gender",
     "smoking_status",
     "bedtime",
-    "wakeup_time"
+    "wakeup_time",
 ]
 
 sampled_records = train_set[required_columns].sample(n=1000, replace=True).to_dict(orient="records")
@@ -117,12 +112,13 @@ Each body should be list of json with columns
 
 start_time = time.time()
 
-model_serving_endpoint = (
-    f"https://{host}/serving-endpoints/sleep-efficiencies-model-serving/invocations"
-)
+model_serving_endpoint = f"https://{host}/serving-endpoints/sleep-efficiencies-model-serving/invocations"
 
 # Convert Timestamp to string
-dataframe_records[0] = [{k: (v.isoformat() if isinstance(v, pd.Timestamp) else v) for k, v in record.items()} for record in dataframe_records[0]]
+dataframe_records[0] = [
+    {k: (v.isoformat() if isinstance(v, pd.Timestamp) else v) for k, v in record.items()}
+    for record in dataframe_records[0]
+]
 
 response = requests.post(
     f"{model_serving_endpoint}",
@@ -145,9 +141,7 @@ print("Execution time:", execution_time, "seconds")
 # COMMAND ----------
 
 # Initialize variables
-model_serving_endpoint = (
-    f"https://{host}/serving-endpoints/sleep-efficiencies-model-serving/invocations"
-)
+model_serving_endpoint = f"https://{host}/serving-endpoints/sleep-efficiencies-model-serving/invocations"
 
 headers = {"Authorization": f"Bearer {token}"}
 num_requests = 1000
@@ -155,7 +149,10 @@ num_requests = 1000
 
 # Function to make a request and record latency
 def send_request():
-    random_record = [{k: (v.isoformat() if isinstance(v, pd.Timestamp) else v) for k, v in record.items()} for record in random.choice(dataframe_records)]
+    random_record = [
+        {k: (v.isoformat() if isinstance(v, pd.Timestamp) else v) for k, v in record.items()}
+        for record in random.choice(dataframe_records)
+    ]
     start_time = time.time()
     response = requests.post(
         model_serving_endpoint,

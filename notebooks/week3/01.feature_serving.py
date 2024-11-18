@@ -94,7 +94,10 @@ preds_df = spark.createDataFrame(preds_df)
 # 1. Create the feature table in Databricks
 
 fe.create_table(
-    name=feature_table_name, primary_keys=["id"], df=preds_df, description="Sleep efficiencies predictions feature table"
+    name=feature_table_name,
+    primary_keys=["id"],
+    df=preds_df,
+    description="Sleep efficiencies predictions feature table",
 )
 
 # Enable Change Data Feed
@@ -124,7 +127,9 @@ online_table_pipeline = workspace.online_tables.create(name=online_table_name, s
 # Define features to look up from the feature table
 features = [
     FeatureLookup(
-        table_name=feature_table_name, lookup_key="Id", feature_names=["id", "sleep_duration", "awakenings", "sleep_month", "Predicted_SleepEfficiency"]
+        table_name=feature_table_name,
+        lookup_key="Id",
+        feature_names=["id", "sleep_duration", "awakenings", "sleep_month", "Predicted_SleepEfficiency"],
     )
 ]
 
@@ -162,7 +167,6 @@ workspace.serving_endpoints.create(
 # MAGIC ## Call The Endpoint
 
 # COMMAND ----------
-
 
 
 # COMMAND ----------
