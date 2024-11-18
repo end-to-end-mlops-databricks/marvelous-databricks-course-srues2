@@ -1,7 +1,8 @@
 # Databricks notebook source
-# MAGIC %pip install ../housing_price-0.0.1-py3-none-any.whl
+# MAGIC %pip install ../mlops_with_databricks-0.0.1-py3-none-any.whl
 
 # COMMAND ----------
+
 # MAGIC %restart_python
 
 # COMMAND ----------
@@ -41,8 +42,8 @@ schema_name = config.schema_name
 
 online_table_name = f"{catalog_name}.{schema_name}.sleep_features_online"
 spec = OnlineTableSpec(
-    primary_key_columns=["Id"],
-    source_table_full_name=f"{catalog_name}.{schema_name}.sleep_features",
+    primary_key_columns=["Month"],
+    source_table_full_name=f"{catalog_name}.{schema_name}.temperature_features",
     run_triggered=OnlineTableSpecTriggeredSchedulingPolicy.from_dict({"triggered": "true"}),
     perform_full_copy=False,
 )
@@ -52,7 +53,7 @@ online_table_pipeline = workspace.online_tables.create(name=online_table_name, s
 # COMMAND ----------
 
 
-config = ProjectConfig.from_yaml(config_path="/Volumes/mlops_dev/sleep_efficiencies/data/project_config.yml")
+config = ProjectConfig.from_yaml(config_path="../../project_config.yml")
 
 catalog_name = config.catalog_name
 schema_name = config.schema_name
@@ -105,7 +106,8 @@ required_columns = [
     "smoking_status",
     "bedtime",
     "wakeup_time",
-    "id"
+    "id",
+    "sleep_month"
 ]
 
 train_set = spark.table(f"{catalog_name}.{schema_name}.train_set").toPandas()
@@ -122,9 +124,14 @@ train_set.dtypes
 dataframe_records[0]
 
 # COMMAND ----------
+
+import pandas as pd
+
 start_time = time.time()
 
 model_serving_endpoint = f"https://{host}/serving-endpoints/sleep-efficiencies-model-serving-fe/invocations"
+
+dataframe_records[0] = [{k: (v.isoformat() if isinstance(v, pd.Timestamp) else v) for k, v in record.items()} for record in dataframe_records[0]]
 
 response = requests.post(
     f"{model_serving_endpoint}",
@@ -141,8 +148,12 @@ print("Execution time:", execution_time, "seconds")
 
 # COMMAND ----------
 
-sleep_features = spark.table(f"{catalog_name}.{schema_name}.sleep_features").toPandas()
+sleep_features = spark.table(f"{catalog_name}.{schema_name}.temperature_features").toPandas()
 
 # COMMAND ----------
 
 sleep_features.dtypes
+
+# COMMAND ----------
+
+

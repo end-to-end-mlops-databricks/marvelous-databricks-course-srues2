@@ -1,10 +1,10 @@
 # Databricks notebook source
 # The 2 cells below is only when you are running from databricks UI, because of 'possible' not working locally in VS
-# %pip install mlops_with_databricks-0.0.1-py3-none-any.whl
+%pip install ../mlops_with_databricks-0.0.1-py3-none-any.whl
 
 # COMMAND ----------
 
-# dbutils.library.restartPython()
+dbutils.library.restartPython()
 
 # COMMAND ----------
 
@@ -176,12 +176,12 @@ training_df = training_set.load_df().toPandas()
 testing_df = testing_set.load_df().toPandas()
 
 # Split features and target
-X_train = training_df[num_features + cat_features + "AverageTemperature"]
+X_train = training_df[num_features + cat_features + ["AverageTemperature"]]
 # Don't use sleep_hours_duration, because it's covered in sleep_duration, but was a example to use feature function option
 # X_train = training_df[num_features + cat_features + ["sleep_hours_duration"]]
 
 y_train = training_df[target]
-X_test = testing_df[num_features + cat_features + "AverageTemperature"]
+X_test = testing_df[num_features + cat_features + ["AverageTemperature"]]
 # Don't use sleep_hours_duration, because it's covered in sleep_duration, but was a example to use feature function option
 # X_test= testing_df[num_features + cat_features + ["sleep_hours_duration"]]
 y_test = testing_df[target]
