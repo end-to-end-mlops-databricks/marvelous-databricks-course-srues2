@@ -226,5 +226,5 @@ with mlflow.start_run(tags={"branch": "week1and2_stanruessink", "git_sha": f"{gi
         signature=signature,
     )
 mlflow.register_model(
-    model_uri=f"runs:/{run_id}/lightgbm-pipeline-model-fe", name=f"{catalog_name}.{schema_name}.house_prices_model_fe"
+    model_uri=f"runs:/{run_id}/lightgbm-pipeline-model-fe", name=f"{catalog_name}.{schema_name}.sleep_efficiencies_model_fe"
 )
