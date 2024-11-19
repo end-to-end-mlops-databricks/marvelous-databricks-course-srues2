@@ -171,7 +171,7 @@ workspace.serving_endpoints.create(
 
 # COMMAND ----------
 
-token = dbutils.notebook.entry_point.getDbutils().notebook().getContext().apiToken().get()
+token = dbutils.notebook.entry_point.getDbutils().notebook().getContext().apiToken().get()  # type: ignore # noqa: F821
 host = spark.conf.get("spark.databricks.workspaceUrl")
 
 # COMMAND ----------
