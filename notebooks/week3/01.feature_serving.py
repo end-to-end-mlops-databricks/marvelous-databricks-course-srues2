@@ -178,9 +178,6 @@ host = spark.conf.get("spark.databricks.workspaceUrl")
 
 id_list = preds_df["Id"]
 
-# COMMAND ----------
-
-display(id_list)
 
 # COMMAND ----------
 

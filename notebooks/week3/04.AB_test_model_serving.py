@@ -265,8 +265,6 @@ model = mlflow.pyfunc.load_model(model_uri=f"models:/{model_name}/{model_version
 # Run prediction
 predictions = model.predict(X_test.iloc[0:1])
 
-# Display predictions
-predictions
 
 # COMMAND ----------
 

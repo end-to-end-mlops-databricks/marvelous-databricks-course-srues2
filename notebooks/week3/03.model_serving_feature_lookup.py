@@ -15,6 +15,7 @@
 
 import time
 
+import pandas as pd
 import requests
 from databricks.sdk import WorkspaceClient
 from databricks.sdk.service.catalog import (
@@ -117,15 +118,9 @@ dataframe_records = [[record] for record in sampled_records]
 
 # COMMAND ----------
 
-train_set.dtypes
-
-# COMMAND ----------
-
 dataframe_records[0]
 
 # COMMAND ----------
-
-import pandas as pd
 
 start_time = time.time()
 
@@ -153,8 +148,5 @@ print("Execution time:", execution_time, "seconds")
 
 sleep_features = spark.table(f"{catalog_name}.{schema_name}.temperature_features").toPandas()
 
-# COMMAND ----------
-
-sleep_features.dtypes
 
 # COMMAND ----------
