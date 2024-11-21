@@ -68,9 +68,11 @@ cat_features:
   gender:
     type: string
     allowed_values: ["Female", "Male"]
+    encoding: null
   smoking_status:
     type: string
     allowed_values:  ["Yes", "No"]
+    encoding: null
 
 date_features:
   bedtime:
