@@ -34,6 +34,20 @@ class Parameters(BaseModel):
     max_depth: int = Field(..., gt=0, le=32)  # Use Field to set constraints
 
 class ProjectConfig(BaseModel):
+    """
+    Defines the configuration for the project.
+    - `catalog`: The data catalog name.
+    - `db_schema`: The schema where the dataset resides. Alias to `schema`
+    - `use_case_name`: The name of the use case.
+    - `user_dir_path`: Path of the user folder in Databricks, this is used for the experiment, volume and git repo location
+    - `git_repo`: Name of the Git repo
+    - `volume_whl_path`: Volume path where the whl is stored
+    - `parameters`: Model parameters such as learning rate and estimators.
+    - `num_features`: Numerical features with details on type and constraints.
+    - `cat_features`: Categorical features with details on type, allowed values, and constraints.
+    - `target`: The target variable for model training (e.g., booking status).
+    - `primary_key`: The priamry key in the input data, this is used for the registration of the data in the feature table
+    """
     num_features: Dict[str, NumFeature]
     cat_features: Dict[str, CatFeature]
     date_features: Dict[str, DateFeature]

@@ -22,38 +22,47 @@ num_features:
     type: integer
     constraints: 
       min: 0
+      max: null
   sleep_duration:
-    type: double
+    type: float
     constraints:
       min: 0.0
+      max: null
   rem_sleep_percentage:
     type: integer
     constraints: 
       min: 0
+      max: null
   deep_sleep_percentage:
     type: integer
     constraints: 
       min: 0
+      max: null
   light_sleep_percentage:
     type: integer
     constraints: 
       min: 0
+      max: null
   awakenings:
-    type: double
+    type: float
     constraints:
       min: 0.0
+      max: null
   caffeine_consumption:
-    type: double
+    type: float
     constraints:
       min: 0.0
+      max: null
   alcohol_consumption:
-    type: double
+    type: float
     constraints:
       min: 0.0
+      max: null
   exercise_frequency:
-    type: double
+    type: float
     constraints:
       min: 0.0
+      max: null
 
 cat_features:
   gender:
