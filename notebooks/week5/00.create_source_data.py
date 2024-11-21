@@ -1,4 +1,10 @@
 # Databricks notebook source
+# The 2 cells below is only when you are running from databricks UI, because of 'possible' not working locally in VS
+# MAGIC %pip install ../mlops_with_databricks-0.0.1-py3-none-any.whl
+
+# COMMAND ----------
+
+# MAGIC dbutils.library.restartPython()
 # COMMAND ----------
 from sleep_efficiency.utils import generate_synthetic_data
 from pyspark.sql import SparkSession

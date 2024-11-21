@@ -10,6 +10,11 @@ class ProjectConfig(BaseModel):
     target: str
     catalog_name: str
     schema_name: str
+    use_case_name: str
+    volume_whl_path: str
+    user_dir_path: str
+    git_repo: str
+    primary_key: str
     parameters: Dict[str, Any]  # Dictionary to hold model-related parameters
     ab_test: Dict[str, Any]  # Dictionary to hold A/B test parameters
 
