@@ -25,6 +25,9 @@ def generate_synthetic_data(config: ProjectConfig, input_data: DataFrame, num_ro
     # Loop through numerical features with constraints
     num_features = {key: {"min": feature.constraints.min} for key, feature in config.num_features.items()}
 
+    # change column names to lowercase and replace spaces with underscores
+    input_data.columns = input_data.columns.str.lower().str.replace(" ", "_")
+    
     # Loop through the columns and generate data based on constraints
     for col_name, constraints in num_features.items():
         mean_val, std_val = input_data.select(mean(col_name), stddev(col_name)).first()
