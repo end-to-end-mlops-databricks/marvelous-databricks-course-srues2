@@ -18,23 +18,56 @@ ab_test:
   max_depth_b: 10
 
 num_features:
-  - age
-  - sleep_duration
-  - rem_sleep_percentage
-  - deep_sleep_percentage
-  - light_sleep_percentage
-  - awakenings
-  - caffeine_consumption
-  - alcohol_consumption
-  - exercise_frequency
+  age:
+    type: integer
+    constraints: 
+      min: 0
+  sleep_duration:
+    type: double
+    constraints:
+      min: 0.0
+  rem_sleep_percentage:
+    type: integer
+    constraints: 
+      min: 0
+  deep_sleep_percentage:
+    type: integer
+    constraints: 
+      min: 0
+  light_sleep_percentage:
+    type: integer
+    constraints: 
+      min: 0
+  awakenings:
+    type: double
+    constraints:
+      min: 0.0
+  caffeine_consumption:
+    type: double
+    constraints:
+      min: 0.0
+  alcohol_consumption:
+    type: double
+    constraints:
+      min: 0.0
+  exercise_frequency:
+    type: double
+    constraints:
+      min: 0.0
 
 cat_features:
-  - gender
-  - smoking_status
+  gender:
+    type: string
+    allowed_values: ["Female", "Male"]
+  smoking_status:
+    type: string
+    allowed_values:  ["Yes", "No"]
 
 date_features:
-  - bedtime
-  - wakeup_time
+  bedtime:
+    type: timestamp
+  wakeup_time:
+    type: timestamp
 
 target: sleep_efficiency
 
