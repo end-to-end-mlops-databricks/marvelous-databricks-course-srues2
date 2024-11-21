@@ -1,5 +1,9 @@
 catalog_name: dbw_mavencourse_e2emlops_weu_001
 schema_name: sleep_efficiency
+use_case_name: sleep_efficiencies
+volume_whl_path: ${VOLUME_WHL_PATH}
+user_dir_path: ${USER_DIR_PATH}
+git_repo: marvelous-databricks-course-srues2
 
 parameters:
   learning_rate: 0.01
@@ -33,3 +37,5 @@ date_features:
   - wakeup_time
 
 target: sleep_efficiency
+
+primary_key: ID
