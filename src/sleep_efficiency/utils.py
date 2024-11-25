@@ -24,6 +24,7 @@ def generate_synthetic_data(config: ProjectConfig, input_data: DataFrame, num_ro
 
     # Save the original column names
     original_columns = input_data.columns
+    column_dtypes = input_data.dtypes  # A dictionary of column names and their types
     renamed_columns = {col: col.lower().replace(" ", "_") for col in original_columns}
 
     # Rename columns in input_data
@@ -43,6 +44,13 @@ def generate_synthetic_data(config: ProjectConfig, input_data: DataFrame, num_ro
         # Apply min constraints
         synthetic_data[col_name] = np.maximum(synthetic_data[col_name], constraints["min"])
 
+        # Ensure the column's original dtype is preserved
+        if column_dtypes[col_name] == "int":
+            synthetic_data[col_name] = synthetic_data[col_name].astype(int)
+        elif column_dtypes[col_name] == "float":
+            synthetic_data[col_name] = synthetic_data[col_name].astype(float)
+
+
     # Loop through categorical features with allowed values
     cat_features = {
         key: [
@@ -53,6 +61,9 @@ def generate_synthetic_data(config: ProjectConfig, input_data: DataFrame, num_ro
     }
     for col_name, allowed_values in cat_features.items():
         synthetic_data[col_name] = np.random.choice(allowed_values, num_rows)
+        # Ensure the column's original dtype is preserved
+        if column_dtypes[col_name] == "string":
+            synthetic_data[col_name] = synthetic_data[col_name].astype(str)
 
     # Loop through date features
     date_features = {key: feature for key, feature in config.date_features.items()}
@@ -74,7 +85,7 @@ def generate_synthetic_data(config: ProjectConfig, input_data: DataFrame, num_ro
         # Generate random datetimes within the range
         min_timestamp = int(min_datetime.timestamp())
         max_timestamp = int(max_datetime.timestamp())
-        # Special handling for `bedtime` and `wakeup_time`
+        # Special handling for `bedtime` and `wakeup_time`. Bedtime must behore wakeuptime and maximum difference 18hours sleep
         if col_name == "bedtime":
             # Generate bedtime values first
             bedtime_values = np.random.randint(min_timestamp, max_timestamp, num_rows)
@@ -88,13 +99,10 @@ def generate_synthetic_data(config: ProjectConfig, input_data: DataFrame, num_ro
             wakeup_times = []
             for bedtime in bedtime_values:
                 max_wakeup_time = bedtime + pd.Timedelta(hours=18)
-                
                 # Ensure the max wakeup time does not exceed the configured max datetime
                 max_wakeup_timestamp = min(max_wakeup_time.timestamp(), max_timestamp)
-                
                 # Ensure wakeup time is after bedtime and within range
                 wakeup_time = np.random.randint(bedtime.timestamp(), max_wakeup_timestamp)
-                
                 # Ensure the generated wakeup time is always after bedtime (just to be extra safe)
                 if wakeup_time <= bedtime.timestamp():
                     wakeup_time = bedtime.timestamp() + 1  # Just ensure it's after bedtime
@@ -107,6 +115,11 @@ def generate_synthetic_data(config: ProjectConfig, input_data: DataFrame, num_ro
             synthetic_data[col_name] = pd.to_datetime(
                 np.random.randint(min_timestamp, max_timestamp, num_rows), unit="s"
             )
+            # Ensure the column's original dtype is preserved
+            if column_dtypes[col_name] == "timestamp":
+                synthetic_data[col_name] = synthetic_data[col_name].astype("datetime64[ns]")
+            # Add the column with the correct data type to the final dataframe
+            synthetic_data[col_name] = synthetic_data[col_name].astype(column_dtypes[col_name])
 
         # Create target variable (sleep_efficiency) as a random value between 0 and 1
         synthetic_data[config.target] = np.random.uniform(0, 1, num_rows)
