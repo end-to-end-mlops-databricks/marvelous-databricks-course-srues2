@@ -24,7 +24,7 @@ def generate_synthetic_data(config: ProjectConfig, input_data: DataFrame, num_ro
 
     # Save the original column names
     original_columns = input_data.columns
-    column_dtypes = input_data.dtypes  # A dictionary of column names and their types
+    column_dtypes = dict(input_data.dtypes)  # Convert list of tuples to a dictionary for easier access
     renamed_columns = {col: col.lower().replace(" ", "_") for col in original_columns}
 
     # Rename columns in input_data
