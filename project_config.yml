@@ -83,7 +83,7 @@ date_features:
   wakeup_time:
     type: timestamp
     constraints: 
-      min: "2024-12-31 23:59:59"
+      min: "2021-01-01 00:00:00"
       max: null
 
 target: sleep_efficiency
