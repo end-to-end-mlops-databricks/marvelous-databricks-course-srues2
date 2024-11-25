@@ -5,6 +5,7 @@ from sleep_efficiency.config import ProjectConfig
 from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql.functions import avg as mean
 from pyspark.sql.functions import stddev
+from pyspark.sql.functions import current_timestamp
 
 spark = SparkSession.builder.getOrCreate()
 
@@ -149,6 +150,9 @@ def generate_synthetic_data(config: ProjectConfig, input_data: DataFrame, num_ro
     renamed_to_original = {v: k for k, v in renamed_columns.items()}
     for renamed_col, original_col in renamed_to_original.items():
         synthetic_df = synthetic_df.withColumnRenamed(renamed_col, original_col)
+
+    # Add update_timestamp_utc column with the current UTC timestamp
+    synthetic_df = synthetic_df.withColumn("update_timestamp_utc", current_timestamp())
 
     return synthetic_df
 
