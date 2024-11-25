@@ -45,9 +45,9 @@ def generate_synthetic_data(config: ProjectConfig, input_data: DataFrame, num_ro
         synthetic_data[col_name] = np.maximum(synthetic_data[col_name], constraints["min"])
 
         # Ensure the column's original dtype is preserved
-        if column_dtypes[col_name] == "int":
+        if column_dtypes[renamed_columns.get(col_name, col_name)] == "int":
             synthetic_data[col_name] = synthetic_data[col_name].astype(int)
-        elif column_dtypes[col_name] == "float":
+        elif column_dtypes[renamed_columns.get(col_name, col_name)] == "float":
             synthetic_data[col_name] = synthetic_data[col_name].astype(float)
 
 
@@ -62,7 +62,7 @@ def generate_synthetic_data(config: ProjectConfig, input_data: DataFrame, num_ro
     for col_name, allowed_values in cat_features.items():
         synthetic_data[col_name] = np.random.choice(allowed_values, num_rows)
         # Ensure the column's original dtype is preserved
-        if column_dtypes[col_name] == "string":
+        if column_dtypes[renamed_columns.get(col_name, col_name)] == "string":
             synthetic_data[col_name] = synthetic_data[col_name].astype(str)
 
     # Loop through date features
@@ -116,10 +116,11 @@ def generate_synthetic_data(config: ProjectConfig, input_data: DataFrame, num_ro
                 np.random.randint(min_timestamp, max_timestamp, num_rows), unit="s"
             )
             # Ensure the column's original dtype is preserved
-            if column_dtypes[col_name] == "timestamp":
+            if column_dtypes[renamed_columns.get(col_name, col_name)] == "timestamp":
                 synthetic_data[col_name] = synthetic_data[col_name].astype("datetime64[ns]")
+
             # Add the column with the correct data type to the final dataframe
-            synthetic_data[col_name] = synthetic_data[col_name].astype(column_dtypes[col_name])
+            synthetic_data[col_name] = synthetic_data[col_name].astype(column_dtypes[renamed_columns.get(col_name, col_name)])
 
         # Create target variable (sleep_efficiency) as a random value between 0 and 1
         synthetic_data[config.target] = np.random.uniform(0, 1, num_rows)
