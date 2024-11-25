@@ -74,12 +74,42 @@ def generate_synthetic_data(config: ProjectConfig, input_data: DataFrame, num_ro
         # Generate random datetimes within the range
         min_timestamp = int(min_datetime.timestamp())
         max_timestamp = int(max_datetime.timestamp())
-        synthetic_data[col_name] = pd.to_datetime(
-            np.random.randint(min_timestamp, max_timestamp, num_rows), unit="s"
-        )
+        # Special handling for `bedtime` and `wakeup_time`
+        if col_name == "bedtime":
+            # Generate bedtime values first
+            bedtime_values = np.random.randint(min_timestamp, max_timestamp, num_rows)
+            synthetic_data[col_name] = pd.to_datetime(bedtime_values, unit="s")
+        elif col_name == "wakeup_time":
+            # Ensure wakeup times are generated after the bedtimes and within the 18-hour limit
+            bedtime_values = synthetic_data.get("bedtime")
+            if bedtime_values is None:
+                raise ValueError("`bedtime` column must be generated before `wakeup_time`.")
 
-    # Create target variable (sleep_efficiency) as a random value between 0 and 1
-    synthetic_data[config.target] = np.random.uniform(0, 1, num_rows)
+            wakeup_times = []
+            for bedtime in bedtime_values:
+                max_wakeup_time = bedtime + pd.Timedelta(hours=18)
+                
+                # Ensure the max wakeup time does not exceed the configured max datetime
+                max_wakeup_timestamp = min(max_wakeup_time.timestamp(), max_timestamp)
+                
+                # Ensure wakeup time is after bedtime and within range
+                wakeup_time = np.random.randint(bedtime.timestamp(), max_wakeup_timestamp)
+                
+                # Ensure the generated wakeup time is always after bedtime (just to be extra safe)
+                if wakeup_time <= bedtime.timestamp():
+                    wakeup_time = bedtime.timestamp() + 1  # Just ensure it's after bedtime
+
+                wakeup_times.append(wakeup_time)
+
+            synthetic_data[col_name] = pd.to_datetime(wakeup_times, unit="s")
+        else:
+            # Handle other date features
+            synthetic_data[col_name] = pd.to_datetime(
+                np.random.randint(min_timestamp, max_timestamp, num_rows), unit="s"
+            )
+
+        # Create target variable (sleep_efficiency) as a random value between 0 and 1
+        synthetic_data[config.target] = np.random.uniform(0, 1, num_rows)
 
     # Create unique id's
     existing_ids = input_data.select(config.primary_key).rdd.flatMap(lambda x: x).collect()
