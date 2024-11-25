@@ -22,13 +22,17 @@ def generate_synthetic_data(config: ProjectConfig, input_data: DataFrame, num_ro
     num_rows = min(num_rows, 10)  # Cap the number of rows
     synthetic_data = {}
 
+    # Save the original column names
+    original_columns = input_data.columns
+    renamed_columns = {col: col.lower().replace(" ", "_") for col in original_columns}
+
+    # Rename columns in input_data
+    for original_col, renamed_col in renamed_columns.items():
+        input_data = input_data.withColumnRenamed(original_col, renamed_col)
+    
     # Loop through numerical features with constraints
     num_features = {key: {"min": feature.constraints.min} for key, feature in config.num_features.items()}
 
-    # change column names to lowercase and replace spaces with underscores
-    for col in input_data.columns:
-        input_data = input_data.withColumnRenamed(col, col.lower().replace(" ", "_"))
-    
     # Loop through the columns and generate data based on constraints
     for col_name, constraints in num_features.items():
         mean_val, std_val = input_data.select(mean(col_name), stddev(col_name)).first()
@@ -65,6 +69,11 @@ def generate_synthetic_data(config: ProjectConfig, input_data: DataFrame, num_ro
 
     # Convert the synthetic data dictionary to a DataFrame
     synthetic_df = spark.createDataFrame(pd.DataFrame(synthetic_data))
+
+     # Restore original column names
+    renamed_to_original = {v: k for k, v in renamed_columns.items()}
+    for renamed_col, original_col in renamed_to_original.items():
+        synthetic_df = synthetic_df.withColumnRenamed(renamed_col, original_col)
 
     return synthetic_df
 
