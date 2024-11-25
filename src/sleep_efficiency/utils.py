@@ -59,7 +59,7 @@ def generate_synthetic_data(config: ProjectConfig, input_data: DataFrame, num_ro
     i = max(existing_ids) + 1 if existing_ids else 1
     while len(new_ids) < num_rows:
         if i not in existing_ids:
-            new_ids.append(str(i))  # Convert numeric ID to string
+            new_ids.append(i)  # Convert numeric ID to string
         i += 1
     synthetic_data[config.primary_key] = new_ids
 
