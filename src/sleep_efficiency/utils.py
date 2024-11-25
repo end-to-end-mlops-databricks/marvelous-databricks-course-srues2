@@ -54,6 +54,22 @@ def generate_synthetic_data(config: ProjectConfig, input_data: DataFrame, num_ro
     for col_name, allowed_values in cat_features.items():
         synthetic_data[col_name] = np.random.choice(allowed_values, num_rows)
 
+    # Loop through date features
+    date_features = {key: feature for key, feature in config.date_features.items()}
+    for col_name, date_feature in date_features.items():
+        # Determine min and max datetime constraints
+        min_datetime = pd.to_datetime(date_feature["constraints"]["min"])
+        max_datetime = pd.to_datetime(date_feature["constraints"]["max"])
+
+        # Generate random datetimes within the range
+        if min_datetime < max_datetime:
+            synthetic_data[col_name] = pd.to_datetime(
+                np.random.uniform(min_datetime.value, max_datetime.value, num_rows), unit="ns"
+            )
+        else:
+            synthetic_data[col_name] = [min_datetime] * num_rows
+
+
     # Create target variable (sleep_efficiency) as a random value between 0 and 1
     synthetic_data[config.target] = np.random.uniform(0, 1, num_rows)
 

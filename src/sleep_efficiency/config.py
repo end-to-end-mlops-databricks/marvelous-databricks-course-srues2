@@ -2,16 +2,19 @@ from typing import Dict, List, Optional, Union, Any
 from pydantic import BaseModel, Field
 import yaml
 from pydantic import BaseModel
+from datetime import datetime
 
 class Constraints(BaseModel):
     min: Optional[Union[int, float]]  # Using Union for both int and float types
     max: Optional[Union[int, float]]  # Optional in case it is not defined
 
+class DateConstraints(BaseModel):
+    min: Optional[datetime]  # Minimum datetime constraint, optional
+    max: Optional[datetime]  # Maximum datetime constraint, optional
 
 class NumFeature(BaseModel):
     type: str
     constraints: Constraints
-
 
 class CatFeature(BaseModel):
     type: str
@@ -20,6 +23,7 @@ class CatFeature(BaseModel):
 
 class DateFeature(BaseModel):
     type: str
+    constraints: DateConstraints
 
 class Parameters(BaseModel):
     """
