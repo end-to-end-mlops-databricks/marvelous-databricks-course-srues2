@@ -45,11 +45,11 @@ def generate_synthetic_data(config: ProjectConfig, input_data: DataFrame, num_ro
         synthetic_data[col_name] = np.maximum(synthetic_data[col_name], constraints["min"])
 
         # Ensure the column's original dtype is preserved
-        # Use renamed column name to access column_dtypes
-        dtype = column_dtypes.get(renamed_columns.get(col_name, col_name))
-        if dtype == "int":
+        original_col_name = [k for k, v in renamed_columns.items() if v == col_name][0]  # Find the original column name
+        dtype = column_dtypes.get(original_col_name)  # Access the original column's dtype
+        if str(dtype).lower() in {"int", "bigint", "long"}:
             synthetic_data[col_name] = synthetic_data[col_name].astype(int)
-        elif dtype == "float":
+        elif str(dtype).lower() in {"float", "double"}:
             synthetic_data[col_name] = synthetic_data[col_name].astype(float)
 
 
@@ -63,8 +63,8 @@ def generate_synthetic_data(config: ProjectConfig, input_data: DataFrame, num_ro
     }
     for col_name, allowed_values in cat_features.items():
         synthetic_data[col_name] = np.random.choice(allowed_values, num_rows)
-        # Ensure the column's original dtype is preserved
-        dtype = column_dtypes.get(renamed_columns.get(col_name, col_name))
+        original_col_name = [k for k, v in renamed_columns.items() if v == col_name][0]  # Find the original column name
+        dtype = column_dtypes.get(original_col_name)  # Access the original column's dtype
         if dtype == "string":
             synthetic_data[col_name] = synthetic_data[col_name].astype(str)
 
@@ -120,7 +120,8 @@ def generate_synthetic_data(config: ProjectConfig, input_data: DataFrame, num_ro
                 np.random.randint(min_timestamp, max_timestamp, num_rows), unit="s"
             )
             # Ensure the column's original dtype is preserved
-            dtype = column_dtypes.get(renamed_columns.get(col_name, col_name))
+            original_col_name = [k for k, v in renamed_columns.items() if v == col_name][0]  # Find the original column name
+            dtype = column_dtypes.get(original_col_name)  # Access the original column's dtype
             if dtype == "timestamp":
                 synthetic_data[col_name] = synthetic_data[col_name].astype("datetime64[ns]")
 
