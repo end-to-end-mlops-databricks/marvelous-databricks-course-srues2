@@ -26,7 +26,7 @@ def generate_synthetic_data(config: ProjectConfig, input_data: DataFrame, num_ro
     num_features = {key: {"min": feature.constraints.min} for key, feature in config.num_features.items()}
 
     # change column names to lowercase and replace spaces with underscores
-    input_data.columns = input_data.columns.str.lower().str.replace(" ", "_")
+    input_data.columns = [col.lower().replace(" ", "_") for col in input_data.columns]
     
     # Loop through the columns and generate data based on constraints
     for col_name, constraints in num_features.items():
