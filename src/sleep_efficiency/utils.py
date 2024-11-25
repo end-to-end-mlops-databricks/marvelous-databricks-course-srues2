@@ -65,13 +65,19 @@ def generate_synthetic_data(config: ProjectConfig, input_data: DataFrame, num_ro
         if max_datetime is None:
             max_datetime = pd.Timestamp.now()
 
+        # Ensure `min_datetime` and `max_datetime` are valid
+        if min_datetime >= max_datetime:
+            raise ValueError(
+                f"Invalid constraints for {col_name}: min_datetime ({min_datetime}) must be earlier than max_datetime ({max_datetime})."
+            )
+
         # Generate random datetimes within the range
         min_timestamp = int(min_datetime.timestamp())
         max_timestamp = int(max_datetime.timestamp())
         synthetic_data[col_name] = pd.to_datetime(
             np.random.randint(min_timestamp, max_timestamp, num_rows), unit="s"
         )
-        
+
     # Create target variable (sleep_efficiency) as a random value between 0 and 1
     synthetic_data[config.target] = np.random.uniform(0, 1, num_rows)
 
