@@ -7,8 +7,9 @@ import re
 
 import mlflow
 
-from sleep_efficiency.utils import check_repo_info
 from sleep_efficiency.config import ProjectConfig
+from sleep_efficiency.utils import check_repo_info
+
 
 def evaluate_model_task():
     config = ProjectConfig.from_yaml(config_path="../../project_config.yml")

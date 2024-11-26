@@ -20,7 +20,7 @@ ab_test:
 num_features:
   age:
     type: integer
-    constraints: 
+    constraints:
       min: 0
       max: null
   sleep_duration:
@@ -30,17 +30,17 @@ num_features:
       max: null
   rem_sleep_percentage:
     type: integer
-    constraints: 
+    constraints:
       min: 0
       max: null
   deep_sleep_percentage:
     type: integer
-    constraints: 
+    constraints:
       min: 0
       max: null
   light_sleep_percentage:
     type: integer
-    constraints: 
+    constraints:
       min: 0
       max: null
   awakenings:
@@ -77,12 +77,12 @@ cat_features:
 date_features:
   bedtime:
     type: timestamp
-    constraints: 
+    constraints:
       min: "2021-01-01 00:00:00"
       max: null
   wakeup_time:
     type: timestamp
-    constraints: 
+    constraints:
       min: "2021-01-01 00:00:00"
       max: null
 

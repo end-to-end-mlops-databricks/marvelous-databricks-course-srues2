@@ -1,29 +1,35 @@
-from typing import Dict, List, Optional, Union, Any
-from pydantic import BaseModel, Field
-import yaml
-from pydantic import BaseModel
 from datetime import datetime
+from typing import Any, Dict, List, Optional, Union
+
+import yaml
+from pydantic import BaseModel, Field
+
 
 class Constraints(BaseModel):
     min: Optional[Union[int, float]]  # Using Union for both int and float types
     max: Optional[Union[int, float]]  # Optional in case it is not defined
 
+
 class DateConstraints(BaseModel):
     min: Optional[datetime]  # Minimum datetime constraint, optional
     max: Optional[datetime]  # Maximum datetime constraint, optional
 
+
 class NumFeature(BaseModel):
     type: str
     constraints: Constraints
+
 
 class CatFeature(BaseModel):
     type: str
     allowed_values: List[Union[str, bool]]  # Can include strings or booleans
     encoding: Optional[List[int]]  # Optional encoding
 
+
 class DateFeature(BaseModel):
     type: str
     constraints: DateConstraints
+
 
 class Parameters(BaseModel):
     """
@@ -36,6 +42,7 @@ class Parameters(BaseModel):
     learning_rate: float = Field(..., gt=0, le=1)  # Use Field to set constraints
     n_estimators: int = Field(..., gt=0, le=10000)  # Use Field to set constraints
     max_depth: int = Field(..., gt=0, le=32)  # Use Field to set constraints
+
 
 class ProjectConfig(BaseModel):
     """
@@ -52,6 +59,7 @@ class ProjectConfig(BaseModel):
     - `target`: The target variable for model training (e.g., booking status).
     - `primary_key`: The priamry key in the input data, this is used for the registration of the data in the feature table
     """
+
     num_features: Dict[str, NumFeature]
     cat_features: Dict[str, CatFeature]
     date_features: Dict[str, DateFeature]

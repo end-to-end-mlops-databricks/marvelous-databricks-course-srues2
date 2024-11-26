@@ -39,10 +39,15 @@ class Featurisation:
         """
         self.config: ProjectConfig = config
         self.feature_data: DataFrame = feature_data
-        self.feature_table_name: str = f"{config.catalog_name}.{config.schema_name}.{config.use_case_name}_{features_type}"
+        self.feature_table_name: str = (
+            f"{config.catalog_name}.{config.schema_name}.{config.use_case_name}_{features_type}"
+        )
         self.primary_key: str = primary_key
 
-    def write_feature_table(self,spark: SparkSession,) -> str:
+    def write_feature_table(
+        self,
+        spark: SparkSession,
+    ) -> str:
         """Write feature data to the databricks Feature Store. If the table already exists, the data will be upserted. If not, then a table will be created in the Feature Store.
 
         Args:

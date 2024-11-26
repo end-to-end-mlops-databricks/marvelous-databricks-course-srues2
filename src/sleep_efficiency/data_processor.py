@@ -1,9 +1,9 @@
-from typing import Optional, Tuple
+from typing import Optional
 
 import pandas as pd
-from pyspark.sql import SparkSession, DataFrame
-from pyspark.sql.functions import current_timestamp, to_utc_timestamp
 from pyspark.ml import Pipeline
+from pyspark.sql import DataFrame, SparkSession
+from pyspark.sql.functions import current_timestamp, to_utc_timestamp
 from sklearn.model_selection import train_test_split
 
 from sleep_efficiency.config import ProjectConfig
@@ -24,7 +24,7 @@ class DataProcessor:
     split_data:
         Splits the DataFrame into training and test sets
     """
-    
+
     def __init__(self, config: ProjectConfig, spark: SparkSession) -> None:
         """Constructs all the necessary attributes for the preprocessing object
 
@@ -32,8 +32,10 @@ class DataProcessor:
             config (ProjectConfig): Project configuration file converted to dict, containing the catalog and schema where the data resides. Moreover, it contains the model parameters, numerical features, categorical features and the target variables.
             spark (SparkSession): The spark session is required for running Spark functionality outside of Databricks.
         """
-        self.config: ProjectConfig = config # Store the configuration
-        self.df: DataFrame = spark.read.table(f"{config.catalog}.{config.db_schema}.raw_{config.use_case_name}") # Store the DataFrame as self.df
+        self.config: ProjectConfig = config  # Store the configuration
+        self.df: DataFrame = spark.read.table(
+            f"{config.catalog}.{config.db_schema}.raw_{config.use_case_name}"
+        )  # Store the DataFrame as self.df
         self.X: Optional[DataFrame] = None
         self.y: Optional[DataFrame] = None
         self.preprocessor: Optional[Pipeline] = None
@@ -78,7 +80,7 @@ class DataProcessor:
         target = self.config.target
         relevant_columns = cat_features + num_features + date_features + [target] + ["id"] + ["sleep_month"]
         self.df = self.df[relevant_columns]
-    
+
     def drop_missing_target(self) -> None:
         """Drops rows with missing target values"""
         target: str = self.config.target

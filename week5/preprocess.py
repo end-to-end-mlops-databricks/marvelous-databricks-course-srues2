@@ -7,10 +7,11 @@ This ensures that the code also works after deploying to a new workspace, while 
 """
 
 from pyspark.sql import SparkSession
+from pyspark.sql.utils import AnalysisException, StreamingQueryException
 
 from sleep_efficiency.config import ProjectConfig
 from sleep_efficiency.data_processor import DataProcessor
-from pyspark.sql.utils import AnalysisException, StreamingQueryException
+
 
 def preprocessing():
     spark = SparkSession.builder.getOrCreate()
@@ -19,21 +20,24 @@ def preprocessing():
 
     data_preprocessor = DataProcessor(config, spark)
     source_data = spark.table(f"{config.catalog_name}.{config.schema_name}.raw_{config.use_case_name}")
-    
+
     refreshed = False
 
-    if spark.catalog.tableExists(f"{config.catalog_name}.{config.schema_name}.{config.use_case_name}_train_set") and spark.catalog.tableExists(f"{config.catalog_name}.{config.schema_name}.{config.use_case_name}_test_set"):
-        train_data_sleep_ids = spark.read.table(f"{config.catalog_name}.{config.schema_name}.{config.use_case_name}_train_set").select(config.primary_key)
-        test_data_sleep_ids = spark.read.table(f"{config.catalog_name}.{config.schema_name}.{config.use_case_name}_test_set").select(config.primary_key)
-
+    if spark.catalog.tableExists(
+        f"{config.catalog_name}.{config.schema_name}.{config.use_case_name}_train_set"
+    ) and spark.catalog.tableExists(f"{config.catalog_name}.{config.schema_name}.{config.use_case_name}_test_set"):
         # Get max update timestamps from existing data
-        max_train_timestamp = spark.table(f"{config.catalog_name}.{config.schema_name}.{config.use_case_name}_train_set") \
-            .select(spark.spark_max("update_timestamp_utc").alias("max_update_timestamp")) \
+        max_train_timestamp = (
+            spark.table(f"{config.catalog_name}.{config.schema_name}.{config.use_case_name}_train_set")
+            .select(spark.spark_max("update_timestamp_utc").alias("max_update_timestamp"))
             .collect()[0]["max_update_timestamp"]
+        )
 
-        max_test_timestamp = spark.table(f"{config.catalog_name}.{config.schema_name}.{config.use_case_name}_test_set") \
-            .select(spark.spark_max("update_timestamp_utc").alias("max_update_timestamp")) \
+        max_test_timestamp = (
+            spark.table(f"{config.catalog_name}.{config.schema_name}.{config.use_case_name}_test_set")
+            .select(spark.spark_max("update_timestamp_utc").alias("max_update_timestamp"))
             .collect()[0]["max_update_timestamp"]
+        )
 
         latest_timestamp = max(max_train_timestamp, max_test_timestamp)
 
@@ -41,15 +45,21 @@ def preprocessing():
         new_data = source_data.filter(spark.col("update_timestamp_utc") > latest_timestamp)
 
         if new_data.isEmpty():
-            print(f"The input data {config.catalog_name}.{config.schema_name}.{config.use_case_name} has no new sleeping IDs and thus no further preprocessing is required")
+            print(
+                f"The input data {config.catalog_name}.{config.schema_name}.{config.use_case_name} has no new sleeping IDs and thus no further preprocessing is required"
+            )
         else:
             try:
                 refreshed = True
                 data_preprocessor.df = new_data
                 data_preprocessor.preprocess()
                 train_new, test_new = data_preprocessor.split_data()
-                train_new.write.format("delta").mode("append").saveAsTable(f"{config.catalog_name}.{config.schema_name}.{config.use_case_name}_train_set")
-                test_new.write.format("delta").mode("append").saveAsTable(f"{config.catalog_name}.{config.schema_name}.{config.use_case_name}_test_set")
+                train_new.write.format("delta").mode("append").saveAsTable(
+                    f"{config.catalog_name}.{config.schema_name}.{config.use_case_name}_train_set"
+                )
+                test_new.write.format("delta").mode("append").saveAsTable(
+                    f"{config.catalog_name}.{config.schema_name}.{config.use_case_name}_test_set"
+                )
                 print("The train and test set has been updated for the new sleeping IDs")
             except (AnalysisException, StreamingQueryException) as e:
                 print(f"Error appending to Delta tables: {str(e)}")
@@ -60,8 +70,12 @@ def preprocessing():
         data_preprocessor.preprocess()
         train, test = data_preprocessor.split_data()
         try:
-            train.write.format("delta").mode("overwrite").saveAsTable(f"{config.catalog_name}.{config.schema_name}.{config.use_case_name}_train_set")
-            test.write.format("delta").mode("overwrite").saveAsTable(f"{config.catalog_name}.{config.schema}.{config.use_case_name}_test_set")
+            train.write.format("delta").mode("overwrite").saveAsTable(
+                f"{config.catalog_name}.{config.schema_name}.{config.use_case_name}_train_set"
+            )
+            test.write.format("delta").mode("overwrite").saveAsTable(
+                f"{config.catalog_name}.{config.schema}.{config.use_case_name}_test_set"
+            )
             print("The train and test set is created for the first time")
         except (AnalysisException, StreamingQueryException) as e:
             print(f"Error creating Delta tables: {str(e)}")

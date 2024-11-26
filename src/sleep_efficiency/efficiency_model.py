@@ -1,7 +1,9 @@
-from sleep_efficiency.config import ProjectConfig
-from pyspark.sql import SparkSession
 from pyspark.ml.feature import Imputer, OneHotEncoder, StandardScaler, StringIndexer, VectorAssembler
+from pyspark.sql import SparkSession
 from sklearn.metrics import mean_squared_error, r2_score
+
+from sleep_efficiency.config import ProjectConfig
+
 
 class EfficiencyModel:
     """A class for creating a PySpark ML model
@@ -26,10 +28,14 @@ class EfficiencyModel:
             config (ProjectConfig): Project configuration file converted to dict, containing the catalog and schema where the data resides. Moreover, it contains the model parameters, numerical features, categorical features and the target variables.
             spark (SparkSession): The spark session is required for running Spark functionality outside of Databricks.
         """
-        self.config: ProjectConfig = config # Store the configuration
+        self.config: ProjectConfig = config  # Store the configuration
         try:
-            self.train_set = spark.read.table(f"{config.catalog_name}.{config.schema_name}.{config.use_case_name}_train_set")
-            self.test_set = spark.read.table(f"{config.catalog_name}.{config.schema_name}.{config.use_case_name}_test_set")
+            self.train_set = spark.read.table(
+                f"{config.catalog_name}.{config.schema_name}.{config.use_case_name}_train_set"
+            )
+            self.test_set = spark.read.table(
+                f"{config.catalog_name}.{config.schema_name}.{config.use_case_name}_test_set"
+            )
         except Exception as e:
             raise RuntimeError("Failed to read training or testing data tables") from e
 

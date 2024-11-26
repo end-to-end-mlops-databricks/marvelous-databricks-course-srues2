@@ -4,8 +4,8 @@ import mlflow
 from databricks.sdk import WorkspaceClient
 from pyspark.sql import SparkSession
 
-from sleep_efficiency.featurisation import Featurisation
 from sleep_efficiency.config import ProjectConfig
+from sleep_efficiency.featurisation import Featurisation
 
 
 def deploy_new_model_predictions():

@@ -5,16 +5,13 @@
 bundle:
   name: marvelous-databricks-course-srues2
 
-include:
-  - bundle_monitoring.yml
-
 artifacts:
-  default: 
+  default:
     type: whl
     build: python -m build
     path: .
 
-variables: 
+variables:
   root_path:
     description: root_path for the target
     default: /Shared/.bundle/${bundle.target}/${bundle.name}
@@ -48,7 +45,7 @@ resources:
             autoscale:
               min_workers: 1
               max_workers: 1
-        
+
       tasks:
         - task_key: "preprocessing"
           job_cluster_key: "sleep-efficiency-cluster"
@@ -62,11 +59,11 @@ resources:
             op: "EQUAL_TO"
             left: "{{tasks.preprocessing.values.refreshed}}"
             right: "true"
-          depends_on: 
+          depends_on:
             - task_key: "preprocessing"
 
         - task_key: "train_model"
-          depends_on: 
+          depends_on:
             - task_key: "if_refreshed"
               outcome: "true"
           job_cluster_key: "sleep-efficiency-cluster"
@@ -76,17 +73,17 @@ resources:
             parameters:
               - "--job_run_id"
               - "{{job.id}}"
-          libraries: 
+          libraries:
             - whl: ./dist/*.whl
 
         - task_key: "evaluate_model"
-          depends_on: 
+          depends_on:
             - task_key: "train_model"
           job_cluster_key: "sleep-efficiency-cluster"
           # existing_cluster_id: 1014-134439-1sgb0b2m
           spark_python_task:
             python_file: "week5/evaluate_model.py"
-          libraries: 
+          libraries:
             - whl: ./dist/*.whl
 
         - task_key: model_update
@@ -94,18 +91,18 @@ resources:
             op: "EQUAL_TO"
             left: "{{tasks.evaluate_model.values.model_update}}"
             right: "1"
-          depends_on: 
+          depends_on:
             - task_key: "evaluate_model"
 
         - task_key: "deploy_model"
-          depends_on: 
+          depends_on:
             - task_key: "model_update"
               outcome: "true"
           job_cluster_key: "sleep-efficiency-cluster"
           # existing_cluster_id: 1014-134439-1sgb0b2m
           spark_python_task:
-            python_file: "week5/deploy_model.py"            
-          libraries: 
+            python_file: "week5/deploy_model.py"
+          libraries:
             - whl: ./dist/*.whl
 
 targets:

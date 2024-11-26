@@ -4,8 +4,9 @@ from databricks.feature_engineering import FeatureFunction, FeatureLookup
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col
 
-from sleep_efficiency.featurisation import Featurisation
 from sleep_efficiency.config import ProjectConfig
+from sleep_efficiency.featurisation import Featurisation
+
 
 def featurisation():
     spark = SparkSession.builder.getOrCreate()
@@ -22,10 +23,9 @@ def featurisation():
 
     fe = feature_engineering.FeatureEngineeringClient()
 
-    train_data = (
-        spark.read.table(f"{config.catalog_name}.{config.schema_name}.{config.use_case_name}_train_data")
-        .withColumn("sleep_hours_duration", col["sleep_hours_duration"].cast("double"))
-    )
+    train_data = spark.read.table(
+        f"{config.catalog_name}.{config.schema_name}.{config.use_case_name}_train_data"
+    ).withColumn("sleep_hours_duration", col["sleep_hours_duration"].cast("double"))
 
     function_name = f"{config.catalog_name}.{config.schema_name}.calculate_sleep_duration"
 

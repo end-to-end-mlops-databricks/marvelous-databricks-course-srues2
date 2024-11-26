@@ -1,17 +1,19 @@
+import json
+from typing import Any, Optional
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from sleep_efficiency.config import ProjectConfig
-from pyspark.sql import DataFrame, SparkSession
-from pyspark.sql.functions import avg as mean
-from pyspark.sql.functions import stddev
-from pyspark.sql.functions import current_timestamp
-from typing import Optional, Any
-import json
 import requests
 from pyspark.ml.evaluation import RegressionEvaluator
+from pyspark.sql import DataFrame, SparkSession
+from pyspark.sql.functions import avg as mean
+from pyspark.sql.functions import current_timestamp, stddev
+
+from sleep_efficiency.config import ProjectConfig
 
 spark = SparkSession.builder.getOrCreate()
+
 
 def generate_synthetic_data(config: ProjectConfig, input_data: DataFrame, num_rows: int = 1000) -> DataFrame:
     """Generates synthetic data in order to simulate data ingestion into the input data.
@@ -35,7 +37,7 @@ def generate_synthetic_data(config: ProjectConfig, input_data: DataFrame, num_ro
     # Rename columns in input_data
     for original_col, renamed_col in renamed_columns.items():
         input_data = input_data.withColumnRenamed(original_col, renamed_col)
-    
+
     # Loop through numerical features with constraints
     num_features = {key: {"min": feature.constraints.min} for key, feature in config.num_features.items()}
 
@@ -57,7 +59,6 @@ def generate_synthetic_data(config: ProjectConfig, input_data: DataFrame, num_ro
         elif str(dtype).lower() in {"float", "double"}:
             synthetic_data[col_name] = synthetic_data[col_name].astype(float)
 
-
     # Loop through categorical features with allowed values
     cat_features = {
         key: [
@@ -72,7 +73,6 @@ def generate_synthetic_data(config: ProjectConfig, input_data: DataFrame, num_ro
         dtype = column_dtypes.get(original_col_name)  # Access the original column's dtype
         if dtype == "string":
             synthetic_data[col_name] = synthetic_data[col_name].astype(str)
-
 
     # Loop through date features
     date_features = {key: feature for key, feature in config.date_features.items()}
@@ -125,7 +125,9 @@ def generate_synthetic_data(config: ProjectConfig, input_data: DataFrame, num_ro
                 np.random.randint(min_timestamp, max_timestamp, num_rows), unit="s"
             )
             # Ensure the column's original dtype is preserved
-            original_col_name = [k for k, v in renamed_columns.items() if v == col_name][0]  # Find the original column name
+            original_col_name = [k for k, v in renamed_columns.items() if v == col_name][
+                0
+            ]  # Find the original column name
             dtype = column_dtypes.get(original_col_name)  # Access the original column's dtype
             if dtype == "timestamp":
                 synthetic_data[col_name] = synthetic_data[col_name].astype("datetime64[ns]")
@@ -150,7 +152,7 @@ def generate_synthetic_data(config: ProjectConfig, input_data: DataFrame, num_ro
     # Convert the synthetic data dictionary to a DataFrame
     synthetic_df = spark.createDataFrame(pd.DataFrame(synthetic_data))
 
-     # Restore original column names
+    # Restore original column names
     renamed_to_original = {v: k for k, v in renamed_columns.items()}
     for renamed_col, original_col in renamed_to_original.items():
         synthetic_df = synthetic_df.withColumnRenamed(renamed_col, original_col)
@@ -159,6 +161,7 @@ def generate_synthetic_data(config: ProjectConfig, input_data: DataFrame, num_ro
     synthetic_df = synthetic_df.withColumn("update_timestamp_utc", current_timestamp())
 
     return synthetic_df
+
 
 def visualize_results(y_test, y_pred):
     plt.figure(figsize=(10, 6))
@@ -184,6 +187,7 @@ def plot_feature_importance(feature_importance, feature_names, top_n=10):
 
 def adjust_predictions(predictions, scale_factor=1.3):
     return predictions * scale_factor
+
 
 def check_repo_info(repo_path: str, dbutils: Optional[Any] = None) -> tuple[str, str]:
     """Retrieves the current branch and sha in the Databricks Git repos, based on the repo path.
@@ -218,6 +222,7 @@ def check_repo_info(repo_path: str, dbutils: Optional[Any] = None) -> tuple[str,
     db_repo_head_commit = repo_info.get("head_commit_id", "N/A")
 
     return db_repo_branch, db_repo_head_commit
+
 
 def get_error_metrics(
     predictions: DataFrame, label_col_name: str = "label", pred_col_name: str = "prediction"

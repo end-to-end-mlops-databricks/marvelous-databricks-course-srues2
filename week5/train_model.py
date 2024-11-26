@@ -12,24 +12,18 @@ Key functionality:
 The model uses both numerical and categorical features, including a custom calculated house age feature.
 """
 
-from databricks import feature_engineering
-from pyspark.sql import SparkSession
-from databricks.sdk import WorkspaceClient
-import mlflow
 import argparse
-from pyspark.sql import functions as F
-from lightgbm import LGBMRegressor
+
+import mlflow
 from mlflow.models import infer_signature
-from sklearn.compose import ColumnTransformer
-from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
+from pyspark.sql import SparkSession
+from sklearn.ensemble import RandomForestRegressor
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import OneHotEncoder
-from datetime import datetime
-from databricks.feature_engineering import FeatureFunction, FeatureLookup
+
 from sleep_efficiency.config import ProjectConfig
 from sleep_efficiency.efficiency_model import EfficiencyModel
 from sleep_efficiency.utils import check_repo_info, get_error_metrics
-from sklearn.ensemble import RandomForestRegressor
+
 
 def train_model():
     parser = argparse.ArgumentParser()
@@ -78,9 +72,7 @@ def train_model():
     )
 
     with mlflow.start_run(
-        tags={"git_sha": git_sha, 
-              "branch": git_branch
-              },
+        tags={"git_sha": git_sha, "branch": git_branch},
     ) as run:
         run_id = run.info.run_id
 
@@ -100,7 +92,13 @@ def train_model():
         mlflow.log_metric("r2_score", error_metrics["r2"])
         signature = infer_signature(model_input=train_set, model_output=predictions.select("prediction"))
         # Log model with feature engineering
-        mlflow.spark.log_model(model=model, floavor=mlflow.sklearn, artifact_path="lightgbm-pipeline-model-fe", signature=signature, training_set=train_set)
+        mlflow.spark.log_model(
+            model=model,
+            floavor=mlflow.sklearn,
+            artifact_path="lightgbm-pipeline-model-fe",
+            signature=signature,
+            training_set=train_set,
+        )
 
     model_uri = f"runs:/{run_id}/lightgbm-pipeline-model-fe"
 
