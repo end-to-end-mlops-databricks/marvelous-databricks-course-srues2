@@ -6,6 +6,10 @@ from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql.functions import avg as mean
 from pyspark.sql.functions import stddev
 from pyspark.sql.functions import current_timestamp
+from typing import Optional, Any
+import json
+import requests
+from pyspark.ml.evaluation import RegressionEvaluator
 
 spark = SparkSession.builder.getOrCreate()
 
@@ -180,3 +184,68 @@ def plot_feature_importance(feature_importance, feature_names, top_n=10):
 
 def adjust_predictions(predictions, scale_factor=1.3):
     return predictions * scale_factor
+
+def check_repo_info(repo_path: str, dbutils: Optional[Any] = None) -> tuple[str, str]:
+    """Retrieves the current branch and sha in the Databricks Git repos, based on the repo path.
+
+    Args:
+        repo_path (str): Full path to the Databricks Git repo
+        dbutils (Optional[Any], optional): Databricks utilities, only available in Databricks. Defaults to None.
+
+    Returns:
+        git_branch (str)
+            Current git branch
+        git_sha (str)
+            Current git sha
+    """
+    if dbutils is None:
+        raise ValueError("dbutils cannot be None. Please pass the dbutils object when calling check_repo_info.")
+
+    nb_context = json.loads(dbutils.notebook.entry_point.getDbutils().notebook().getContext().toJson())
+
+    api_url = nb_context["extraContext"]["api_url"]
+
+    api_token = nb_context["extraContext"]["api_token"]
+
+    db_repo_data = requests.get(
+        f"{api_url}/api/2.0/repos",
+        headers={"Authorization": f"Bearer {api_token}"},
+        params={"path_prefix": repo_path},
+    ).json()
+
+    repo_info = db_repo_data["repos"][0]
+    db_repo_branch = repo_info.get("branch", "N/A")
+    db_repo_head_commit = repo_info.get("head_commit_id", "N/A")
+
+    return db_repo_branch, db_repo_head_commit
+
+def get_error_metrics(
+    predictions: DataFrame, label_col_name: str = "label", pred_col_name: str = "prediction"
+) -> dict[str, float]:
+    """Gets the mse, mae, and r2 error metrics.
+
+    Args:
+        predictions (DataFrame): DF containing the label and prediction column.
+        label_col_name (str, optional): Name of the column containing the label. Defaults to "label".
+        pred_col_name (str, optional): Name of the column containing the predictions. Defaults to "prediction".
+
+    Raises:
+        ValueError: If the specified label or prediction column is missing from the DataFrame.
+
+    Returns:
+        dict[str, float]: Dictionary containing the mse, mae, and r2.
+    """
+    # Check for presence of label and prediction columns
+    if label_col_name not in predictions.columns:
+        raise ValueError(f"Label column '{label_col_name}' is missing from the predictions DataFrame.")
+    if pred_col_name not in predictions.columns:
+        raise ValueError(f"Prediction column '{pred_col_name}' is missing from the predictions DataFrame.")
+
+    evaluator = RegressionEvaluator(labelCol=label_col_name, predictionCol=pred_col_name)
+    mse = evaluator.evaluate(predictions, {evaluator.metricName: "mse"})
+    mae = evaluator.evaluate(predictions, {evaluator.metricName: "mae"})
+    r2 = evaluator.evaluate(predictions, {evaluator.metricName: "r2"})
+
+    error_metrics = {"mse": mse, "mae": mae, "r2": r2}
+
+    return error_metrics
