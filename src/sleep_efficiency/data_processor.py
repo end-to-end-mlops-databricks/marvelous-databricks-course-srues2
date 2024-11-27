@@ -5,6 +5,7 @@ from pyspark.ml import Pipeline
 from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql.functions import current_timestamp, to_utc_timestamp
 from sklearn.model_selection import train_test_split
+from pyspark.sql.functions import col
 
 from sleep_efficiency.config import ProjectConfig
 
