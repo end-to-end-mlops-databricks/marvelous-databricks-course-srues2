@@ -16,7 +16,7 @@ from sleep_efficiency.data_processor import DataProcessor
 def preprocessing():
     spark = SparkSession.builder.getOrCreate()
 
-    config = ProjectConfig.from_yaml(config_path="../../project_config.yml")
+    config = ProjectConfig.from_yaml(config_path="../project_config.yml")
 
     data_preprocessor = DataProcessor(config, spark)
     source_data = spark.table(f"{config.catalog_name}.{config.schema_name}.raw_{config.use_case_name}")
