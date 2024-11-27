@@ -43,7 +43,7 @@ def train_model():
     mlflow.set_tracking_uri("databricks")
     mlflow.set_registry_uri("databricks-uc")
 
-    mlflow.set_experiment(experiment_name=f"/{config.user_dir_path}/{config.use_case_name}")
+    mlflow.set_experiment(experiment_name=f"/Shared/{config.use_case_name}")
 
     args = parser.parse_args()
     job_run_id = args.job_run_id

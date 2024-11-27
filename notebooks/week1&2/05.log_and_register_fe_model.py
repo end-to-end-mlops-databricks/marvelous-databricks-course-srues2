@@ -193,7 +193,7 @@ preprocessor = ColumnTransformer(
 pipeline = Pipeline(steps=[("preprocessor", preprocessor), ("regressor", LGBMRegressor(**parameters))])
 
 # Set and start MLflow experiment
-mlflow.set_experiment(experiment_name="/Shared/sleep-efficiency-fe")
+mlflow.set_experiment(experiment_name=" sleep-efficiency-fe")
 git_sha = "nvt"
 
 with mlflow.start_run(tags={"branch": "week1and2_stanruessink", "git_sha": f"{git_sha}"}) as run:
