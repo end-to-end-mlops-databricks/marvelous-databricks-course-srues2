@@ -34,7 +34,7 @@ class DataProcessor:
         """
         self.config: ProjectConfig = config  # Store the configuration
         self.df: DataFrame = spark.read.table(
-            f"{config.catalog}.{config.db_schema}.raw_{config.use_case_name}"
+            f"{config.catalog_name}.{config.schema_name}.raw_{config.use_case_name}"
         )  # Store the DataFrame as self.df
         self.X: Optional[DataFrame] = None
         self.y: Optional[DataFrame] = None
