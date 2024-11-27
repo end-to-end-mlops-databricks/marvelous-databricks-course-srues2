@@ -12,7 +12,7 @@ from sleep_efficiency.utils import check_repo_info
 
 
 def evaluate_model_task():
-    config = ProjectConfig.from_yaml(config_path="../../project_config.yml")
+    config = ProjectConfig.from_yaml(config_path="../project_config.yml")
 
     git_sha = dbutils.jobs.taskValues.get(taskKey="train_model", key="git_sha", debugValue="")  # type: ignore # noqa: F821
     job_run_id = dbutils.jobs.taskValues.get(taskKey="train_model", key="job_run_id", debugValue="")  # type: ignore # noqa: F821

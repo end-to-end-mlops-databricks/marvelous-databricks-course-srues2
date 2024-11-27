@@ -38,7 +38,7 @@ def train_model():
 
     spark = SparkSession.builder.getOrCreate()
 
-    config = ProjectConfig.from_yaml(config_path="../../project_config.yml")
+    config = ProjectConfig.from_yaml(config_path="../project_config.yml")
 
     mlflow.set_tracking_uri("databricks")
     mlflow.set_registry_uri("databricks-uc")

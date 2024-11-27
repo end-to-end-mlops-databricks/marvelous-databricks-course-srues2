@@ -54,10 +54,13 @@ def preprocessing():
                 data_preprocessor.df = new_data
                 data_preprocessor.preprocess()
                 train_new, test_new = data_preprocessor.split_data()
-                train_new.write.format("delta").mode("append").saveAsTable(
+                # Convert the Pandas DataFrames back to PySpark DataFrames
+                train_data = spark.createDataFrame(train_new)
+                test_data = spark.createDataFrame(test_new)
+                train_data.write.format("delta").mode("append").saveAsTable(
                     f"{config.catalog_name}.{config.schema_name}.{config.use_case_name}_train_set"
                 )
-                test_new.write.format("delta").mode("append").saveAsTable(
+                test_data.write.format("delta").mode("append").saveAsTable(
                     f"{config.catalog_name}.{config.schema_name}.{config.use_case_name}_test_set"
                 )
                 print("The train and test set has been updated for the new sleeping IDs")
@@ -69,12 +72,16 @@ def preprocessing():
 
         data_preprocessor.preprocess()
         train, test = data_preprocessor.split_data()
+
         try:
-            train.write.format("delta").mode("overwrite").saveAsTable(
+            # Convert the Pandas DataFrames back to PySpark DataFrames
+            train_data = spark.createDataFrame(train)
+            test_data = spark.createDataFrame(test)
+            train_data.write.format("delta").mode("overwrite").saveAsTable(
                 f"{config.catalog_name}.{config.schema_name}.{config.use_case_name}_train_set"
             )
-            test.write.format("delta").mode("overwrite").saveAsTable(
-                f"{config.catalog_name}.{config.schema}.{config.use_case_name}_test_set"
+            test_data.write.format("delta").mode("overwrite").saveAsTable(
+                f"{config.catalog_name}.{config.schema_name}.{config.use_case_name}_test_set"
             )
             print("The train and test set is created for the first time")
         except (AnalysisException, StreamingQueryException) as e:

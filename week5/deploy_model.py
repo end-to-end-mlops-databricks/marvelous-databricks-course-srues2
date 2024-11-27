@@ -14,7 +14,7 @@ def deploy_new_model_predictions():
 
     model_version = dbutils.jobs.taskValues.get(taskKey="evaluate_model", key="model_version", debugValue=0)  # type: ignore # noqa: F821
 
-    config = ProjectConfig.from_yaml(config_path="../../project_config.yml")
+    config = ProjectConfig.from_yaml(config_path="../project_config.yml")
     workspace = WorkspaceClient()
 
     train_data = spark.read.table(f"{config.catalog_name}.{config.schema_name}.{config.use_case_name}_train_set")

@@ -13,7 +13,7 @@ def featurisation():
     mlflow.set_registry_uri("databricks-uc")
     mlflow.set_tracking_uri("databricks")
 
-    config = ProjectConfig.from_yaml(config_path="../../project_config.yml")
+    config = ProjectConfig.from_yaml(config_path="../project_config.yml")
 
     sleep_efficiencies_data = spark.read.table(f"{config.catalog_name}.{config.schema_name}.{config.use_case_name}")
 

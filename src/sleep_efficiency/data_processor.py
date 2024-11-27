@@ -3,10 +3,10 @@ from typing import Optional
 import pandas as pd
 from pyspark.ml import Pipeline
 from pyspark.sql import DataFrame, SparkSession
-from pyspark.sql.functions import current_timestamp, to_utc_timestamp
+from pyspark.sql.functions import current_timestamp, to_utc_timestamp, to_timestamp
 from sklearn.model_selection import train_test_split
-from pyspark.sql.functions import col, mean, min
-
+from pyspark.sql.functions import col, mean, min, month
+from pyspark.ml.feature import StringIndexer
 from sleep_efficiency.config import ProjectConfig
 
 
@@ -54,16 +54,11 @@ class DataProcessor:
             self.df = self.df.withColumnRenamed(original_col, renamed_col)
 
         # Handle numeric features
-        # num_features = self.config.num_features
-        # for col in num_features.items():
-        #     self.df[col] = pd.to_numeric(self.df[col], errors="coerce")
-        # Handle numeric features
         num_features = self.config.num_features  # Access the num_features from config
         for col_name in num_features.keys():  # Iterate through the column names
             self.df = self.df.withColumn(col_name, col(col_name).cast("float"))
 
         # Fill missing values with mean/max/min or default values
-        # Fill missing values
         self.df = self.df.fillna(
             {
                 "awakenings": self.df.select(min(col("awakenings"))).collect()[0][0],
@@ -75,23 +70,64 @@ class DataProcessor:
 
         # Convert categorical features to the appropriate type
         cat_features = self.config.cat_features
-        for cat_col in cat_features.items():
-            self.df[cat_col] = self.df[cat_col].astype("category")
+        for cat_col in cat_features.keys():
+            indexer = StringIndexer(inputCol=cat_col, outputCol=f"{cat_col}_index")
+            self.df = indexer.fit(self.df).transform(self.df)
 
         # Convert date features to the type datetime
         date_features = self.config.date_features
-        for date_col in date_features.items():
-            self.df[date_col] = pd.to_datetime(self.df[date_col], format="%Y-%m-%d %H:%M:%S")  # Adjust format if needed
+        for date_col in date_features.keys():  # Use .keys() to access only the column names
+            self.df = self.df.withColumn(date_col, to_timestamp(col(date_col), "yyyy-MM-dd HH:mm:ss"))
 
-        # Add 'month' column based on 'bedtime' column if it exists
+        # Add 'sleep_month' column based on 'bedtime' column if it exists
         if "bedtime" in self.df.columns:
-            self.df["sleep_month"] = self.df["bedtime"].dt.month
+            self.df = self.df.withColumn("sleep_month", month(self.df["bedtime"]))
 
         # Extract target and relevant features
         # Since bedtime and wakeup time is reflected in sleep duration, it will be omitted
         target = self.config.target
-        relevant_columns = cat_features + num_features + date_features + [target] + ["id"] + ["sleep_month"]
-        self.df = self.df[relevant_columns]
+        # Extract the column names (keys) from each dictionary
+        cat_columns = list(self.config.cat_features.keys())
+        num_columns = list(self.config.num_features.keys())
+        date_columns = list(self.config.date_features.keys())
+
+        # Combine the relevant columns
+        # relevant_columns = cat_columns + num_columns + date_columns + [target] + ["ID"] + ["sleep_month"]
+        # print("comment uno", self.df)
+        # print(relevant_columns)
+        # print(self.df.columns)
+        # # Select only the relevant columns from the dataframe
+        # self.df = self.df.select([col(column) for column in relevant_columns if column in self.df.columns])
+        # print('selfdf nummero 2', self.df)
+        # # Convert the PySpark DataFrame to a Pandas DataFrame
+        # self.df = self.df.toPandas()
+        # Combine the relevant columns
+        relevant_columns = cat_columns + num_columns + date_columns + [target] + ["ID"] + ["sleep_month"]
+
+        # Print out the relevant columns and the actual columns in the PySpark DataFrame
+        print("Relevant columns:", relevant_columns)
+        print("Columns in self.df:", self.df.columns)
+
+        # Select only the relevant columns from the dataframe
+        selected_columns = [col(column) for column in relevant_columns if column in self.df.columns]
+
+        # If no columns are selected, print a warning
+        if not selected_columns:
+            raise ValueError("None of the relevant columns exist in the DataFrame.")
+
+        # Apply the selection to the DataFrame
+        self.df = self.df.select(*selected_columns)
+
+        # Print the DataFrame after selecting columns
+        # print('DataFrame after selecting columns:', self.df)
+
+        # # Convert the PySpark DataFrame to a Pandas DataFrame
+        # self.df = self.df.toPandas()
+
+        # # Print the Pandas DataFrame
+        # print('Pandas DataFrame:', self.df.head())
+
+
 
     def drop_missing_target(self) -> None:
         """Drops rows with missing target values"""
@@ -118,14 +154,16 @@ class DataProcessor:
         if not 0 < test_size < 1:
             raise ValueError(f"test_size must be between 0 and 1, got {test_size}")
 
-        if self.df.isEmpty():
+        # Check if the DataFrame is empty
+        if self.df.count() == 0:
             raise ValueError("Cannot split an empty DataFrame")
 
         self.drop_missing_target()
 
         train_data: DataFrame
         test_data: DataFrame
-        train_data, test_data = train_test_split(self.df, test_size=test_size, random_state=random_state)
+        train_data, test_data = train_test_split(self.df.toPandas(), test_size=test_size, random_state=random_state)
+
         return train_data, test_data
 
     def save_to_catalog(self, train_set: pd.DataFrame, test_set: pd.DataFrame, spark: SparkSession):
