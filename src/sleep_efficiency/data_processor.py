@@ -50,12 +50,11 @@ class DataProcessor:
         renamed_columns = {col: col.lower().replace(" ", "_") for col in original_columns}
         # Rename columns in input_data
         for original_col, renamed_col in renamed_columns.items():
-            input_data = self.df.withColumnRenamed(original_col, renamed_col)
-
+            self.df = self.df.withColumnRenamed(original_col, renamed_col)
 
         # Handle numeric features
         num_features = self.config.num_features
-        for col in num_features:
+        for col in num_features.items():
             self.df[col] = pd.to_numeric(self.df[col], errors="coerce")
 
         # Fill missing values with mean/max/min or default values
@@ -71,12 +70,12 @@ class DataProcessor:
 
         # Convert categorical features to the appropriate type
         cat_features = self.config.cat_features
-        for cat_col in cat_features:
+        for cat_col in cat_features.items():
             self.df[cat_col] = self.df[cat_col].astype("category")
 
         # Convert date features to the type datetime
         date_features = self.config.date_features
-        for date_col in date_features:
+        for date_col in date_features.items():
             self.df[date_col] = pd.to_datetime(self.df[date_col], format="%Y-%m-%d %H:%M:%S")  # Adjust format if needed
 
         # Add 'month' column based on 'bedtime' column if it exists
