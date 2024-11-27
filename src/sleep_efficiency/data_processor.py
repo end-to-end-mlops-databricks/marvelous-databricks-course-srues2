@@ -43,7 +43,15 @@ class DataProcessor:
     def preprocess(self):
         """Preprocess the DataFrame stored in self.df"""
         # change column names to lowercase and replace spaces with underscores
-        self.df.columns = self.df.columns.str.lower().str.replace(" ", "_")
+        #self.df.columns = self.df.columns.str.lower().str.replace(" ", "_")
+        # Save the original column names
+        original_columns = self.df.columns
+        #column_dtypes = dict(self.df.dtypes)  # Convert list of tuples to a dictionary for easier access
+        renamed_columns = {col: col.lower().replace(" ", "_") for col in original_columns}
+        # Rename columns in input_data
+        for original_col, renamed_col in renamed_columns.items():
+            input_data = self.df.withColumnRenamed(original_col, renamed_col)
+
 
         # Handle numeric features
         num_features = self.config.num_features
