@@ -5,7 +5,7 @@ from pyspark.ml import Pipeline
 from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql.functions import current_timestamp, to_utc_timestamp
 from sklearn.model_selection import train_test_split
-from pyspark.sql.functions import col
+from pyspark.sql.functions import col, mean, min
 
 from sleep_efficiency.config import ProjectConfig
 
@@ -63,14 +63,14 @@ class DataProcessor:
             self.df = self.df.withColumn(col_name, col(col_name).cast("float"))
 
         # Fill missing values with mean/max/min or default values
-        self.df.fillna(
+        # Fill missing values
+        self.df = self.df.fillna(
             {
-                "awakenings": self.df["awakenings"].min(),
-                "caffeine_consumption": self.df["caffeine_consumption"].mean(),
-                "alcohol_consumption": self.df["alcohol_consumption"].mean(),
-                "exercise_frequency": self.df["exercise_frequency"].mean(),
-            },
-            inplace=True,
+                "awakenings": self.df.select(min(col("awakenings"))).collect()[0][0],
+                "caffeine_consumption": self.df.select(mean(col("caffeine_consumption"))).collect()[0][0],
+                "alcohol_consumption": self.df.select(mean(col("alcohol_consumption"))).collect()[0][0],
+                "exercise_frequency": self.df.select(mean(col("exercise_frequency"))).collect()[0][0],
+            }
         )
 
         # Convert categorical features to the appropriate type
