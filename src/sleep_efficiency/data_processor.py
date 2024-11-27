@@ -58,7 +58,7 @@ class DataProcessor:
         # for col in num_features.items():
         #     self.df[col] = pd.to_numeric(self.df[col], errors="coerce")
         # Handle numeric features
-        num_features = self.config["num_features"]  # Access the num_features from config
+        num_features = self.config.num_features  # Access the num_features from config
         for col_name in num_features.keys():  # Iterate through the column names
             self.df = self.df.withColumn(col_name, col(col_name).cast("float"))
 
